@@ -21,16 +21,19 @@ const ProfileText = ({ visible, titleId }) => (
       <DecoderText text="Hi there" start={visible} delay={500} />
     </Heading>
     <Text className={styles.description} data-visible={visible} size="l" as="p">
-      I’m Hamish, currently I live in Sydney working as a senior product designer at{' '}
-      <Link href="https://www.qwilr.com">Qwilr</Link>. My projects include UX design, UI
-      animations, and icon illustration. Being comfortable with code allows me to rapidly
-      prototype and validate experiences. If you’re interested in the tools and software I
-      use check out my <Link href="/uses">uses page</Link>.
+      I’m Seb, currently I live in London, UK working as a junior software engineer at{' '}
+      <Link href="https://www.tutorcruncher.com">TutorCruncher</Link>.  My daily grind is
+      an exciting mix of crafting features, troubleshooting errors, managing microservices,
+      and streamlining CI/CD and DevOps processes. My knack for design also empowers me to
+      swiftly bring attractive and functional ideas to life. Curious about the tech stack
+      that fuels my creativity? Take a peek at my{' '}
+      <Link href="/uses">uses page</Link> to discover the frameworks, languages, and tools in my arsenal.
     </Text>
     <Text className={styles.description} data-visible={visible} size="l" as="p">
-      In my spare time I like to practice Brazilian Jiu Jitsu, play video games, and{' '}
-      <Link href="/projects/volkihar-knight">make mods</Link>. I’m always down for hearing
-      about new projects, so feel free to drop me a line.
+      Outside of work, I immerse myself in coding for personal passion projects, indulge
+      in hands-on DIY tasks, and unwind with co-op video games. I’m always keen to chat
+      about innovative ideas and collaborative ventures. Don’t hesitate to send a message
+      my way if you want to share a project or just say hi!
     </Text>
   </Fragment>
 );
@@ -59,7 +62,7 @@ export const Profile = ({ id, visible, sectionRef }) => {
                 secondary
                 className={styles.button}
                 data-visible={visible}
-                href="/contact"
+                href="mailto:prentice.seb@gmail.com"
                 icon="send"
               >
                 Send me a message

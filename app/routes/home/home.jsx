@@ -103,10 +103,11 @@ export const Home = () => {
         sectionRef={projectOne}
         visible={visibleSections.includes(projectOne.current)}
         index={1}
-        title="Designing the future of education"
-        description="Designing a platform to help educators build better online courseware"
-        buttonText="View project"
-        buttonLink="/projects/smart-sparrow"
+        title="Office Rental Platform and App"
+        description="Designed and developed a platform for Teamworks Execuitve Suites to manage office rentals and bookings."
+        buttonText="View website"
+        buttonLink="https://bookteamworks.com"
+        // buttonLink="/projects/smart-sparrow"
         model={{
           type: 'laptop',
           alt: 'Smart Sparrow lesson builder',
@@ -124,8 +125,8 @@ export const Home = () => {
         sectionRef={projectTwo}
         visible={visibleSections.includes(projectTwo.current)}
         index={2}
-        title="Video game progress tracking"
-        description="Design and development for a video game tracking app built in React Native"
+        title="Cocktail App"
+        description="Developed a spirit recognition and cocktail recipe app."
         buttonText="View website"
         buttonLink="https://gamestack.hamishw.com"
         model={{
@@ -148,8 +149,8 @@ export const Home = () => {
         sectionRef={projectThree}
         visible={visibleSections.includes(projectThree.current)}
         index={3}
-        title="Biomedical image collaboration"
-        description="Increasing the amount of collaboration in Slice, an app for biomedical imaging"
+        title="Larder Inventory Management System"
+        description="Designed and developed a system for Tow Food Larders to manage inventory and orders."
         buttonText="View project"
         buttonLink="/projects/slice"
         model={{

@@ -21,18 +21,18 @@ export const navLinks = [
 
 export const socialLinks = [
   {
-    label: 'Twitter',
-    url: `https://twitter.com/${config.twitter}`,
-    icon: 'twitter',
-  },
-  {
-    label: 'Figma',
-    url: `https://www.figma.com/${config.figma}`,
-    icon: 'figma',
+    label: 'Resume',
+    url: `https://cv.onlineolive.xyz`,
+    icon: 'resume',
   },
   {
     label: 'Github',
     url: `https://github.com/${config.github}`,
     icon: 'github',
+  },
+  {
+    label: 'LinkedIn',
+    url: `https://linkedin.com/in/${config.linkedin}`,
+    icon: 'linkedin',
   },
 ];
