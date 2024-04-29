@@ -1,0 +1,199 @@
+---
+title: 'Launching a simple Django app on AWS Elastic Beanstalk'
+abstract: In this tutorial, we will guide you through the process of launching a simple Django app on AWS Elastic Beanstalk. We will cover everything from setting up your local development environment to deploying your app on AWS Elastic Beanstalk.
+date: '2023-05-18'
+banner: /static/modern-styling-in-react-banner.jpg
+---
+
+Launching TowFood Django App on AWS Elastic Beanstalk
+For the Cloud Computing Module at the University of Buckingham, School of Computing, students were tasked with launching a service or app on AWS Beanstalk
+
+### My application
+
+The application I will be working on within my University of Buckingham final project, An Inventory management system. The system is built using the Django web framework with Tailwind CSS, class-based styling. The Inventory system has three main functions. Record ingoing stock, Record outgoing stock and generate reports on details such as suppliers, members, volunteers, and total stock during a specific date range. I chose this application as it was an initial goal of mine to push my final project to deployment.
+
+### Deploying the application
+To deploy the application, I am choosing to use AWS Elastic Beanstalk, and its free tier to create an environment suitable to host the application on the cloud.
+
+### Setting up your environment
+In order to run an application or service on the cloud you must first be able to run the app/service in a local environment. In my case, my project is written in Python. I first need to create a Python environment inside my project directory:
+
+```bash
+python -m venv env
+```
+
+### Project Requirements
+Once the environment has been made, ensure all project modules required have been installed inside of the environment, then run.
+
+```bash
+pip freeze > requirements.txt
+```
+
+to save all the project dependencies.
+
+Create .ebextensions/django.config. In order to run the application on EC2 elastic beanstalk a .ebextensions folder needs to be created inside the project directory. Inside
+the .ebextensions folder create a file named django.config, Inside the django.config:
+
+```
+option_settings: aws:elasticbeanstalk:container:python:
+WSGIPath: {{Your app name}}.wsgi:application
+```
+
+Allowed hosts. In order for the application to recognize the EC2 container when
+
+deployed edit the settings.py file and change/add:
+
+```
+ALLOWED_HOSTS =[‘*’]
+```
+
+### Zip project for upload
+Zip your project directory in preparation to create the EC2 on elastic beanstalk. On Mac use this command in the project directory to zip the project and all the essential hidden files.
+
+```
+zip ../myapp.zip -r * .[^.]*
+```
+
+### Create EC2 application on elastic beanstalk.
+Navigate to Elastic Beanstalk on the AWS console, create an application, select Python 3.8, and upload the zip. Once the file has been uploaded the project should take a few minutes to deploy. Upon deployment, the page should now be live.
+
+### Static Files
+If your site now does not have any styling or static files, first ensure your Django project has the latest static files:
+``
+python manage.py collectstatic
+```
+
+then edit the django.config:
+
+```
+aws:elasticbeanstalk:environment:proxy:staticfiles: /static: /static
+```
+
+This will tell the EC2 where your static files are located. You can check that the static files have been navigated correctly by navigating to you environment on the AWS console, selecting Configuration from the sidebar then and
+
+### Database Issues
+
+Now that your site is deployed with styling you might come across the issue related to the version of SQLite:
+
+```
+deterministic = True
+```
+
+requires SQLite 3.8.3 or higher
+
+There are currently 2 possible solutions to this problem:
+1: use a different database engine
+2: Downgrade the environment to Python 3.7
+
+For me, I tried option 2 first as I already have a database filled with sample data. But upon creating a new elastic beanstalk environment on Python 3.7 I discovered a lot of the packages I was using required Python 3.8 or newer. I'm sure I could have pursued this option by downgrading my packages, however with further research it appears SQLite is almost never used in actual deployment, thus I went with option 1.
+
+Switching to Postgresql. Assuming you already have Postgres downloaded locally, open pg_admin and create a database. Once the database is created navigate to settings.py and change the DATABASES = { sql…etc} to:
+if ‘RDS_DB_NAME’ in os.environ:
+
+```txt
+DATABASES = {
+    ‘default’: {
+        ‘ENGINE’: ‘django.db.backends.postgresql_psycopg2’,
+        ‘NAME’: os.environ[‘RDS_DB_NAME’],
+        ‘USER’: os.environ[‘RDS_USERNAME’],
+        ‘PASSWORD’: os.environ[‘RDS_PASSWORD’],
+        ‘HOST’: os.environ[‘RDS_HOSTNAME’],
+        ‘PORT’: os.environ[‘RDS_PORT’],
+    }
+}
+```
+
+else:
+
+```txt
+DATABASES = {
+    ‘default’: {
+        ‘ENGINE’: ‘django.db.backends.postgresql_psycopg2’, ‘NAME’: ‘your_db’,
+        ‘USER’: ‘postgres’,
+        ‘PASSWORD’: ‘your_password,
+        ‘HOST’: ‘localhost’,
+        ‘PORT’: ‘5432’,
+    }
+}
+```
+Then you need to run:
+
+```bash
+python manage.py makemigrations
+```
+
+if no changes appear be sure to delete the migrations folder and try again. After the migrations have been made run:
+
+```bash
+python manage.py migrate.
+```
+
+This will create all your tables in your Postgres local database.
+
+### Creating a database on AWS
+
+First, navigate to the elastic beanstalk environment page in your browser. Then select a configuration in the sidebar. Scroll to the bottom under “Data Tier” and click the link labeled “create a new RDS database”.
+On the RDS setup page change the DB engine to “postgres” add a master username and master password and save the changes.
+
+Handling database migrations and creating the superuser. There are two methods for handling the database migrations and creating the superuser. The first method requires using container_commands in your django.config to first start your python environent and run the commands:
+
+```bash
+python manage.py makemigrations pyhton manage.py migrate
+python manage.py createsuperuser
+```
+
+I tried this method but would continue to have issues with running the commands, also I found it very hard to figure out the path to the python environment my EC2 application was using.
+Thus I recommend you this second method.
+AWS CLI. First install awsebcli:
+
+```bash
+pip install awsebcli
+```
+
+check to see if it installed correctly with:
+
+```bash
+eb –version
+```
+
+this should return the version of the package, and show that it has been installed correctly. Next we need to initialise our app with eb:
+
+```bash
+eb init
+```
+
+the initialization process contains naming your application and selecting the default region, I would recommend selecting the closest to you, and credentials.
+
+### AWS Credentials
+
+Head over to IAM in the AWS console, then create a user and add the permission “AdministratorAccess”. Once the user has been created navigate to the security credentials page on the user summary. Now navigate back to the terminal and generate an RSA keypair, the keypair will generate a SSH public key, copy and paste the public key from the terminal, and select the “upload SSH public key” page on the Users, security credentials page. Now you should be able to ssh to your application EC2 from your terminal.
+
+```bash
+eb ssh
+```
+
+Once you are connected, use a combination of ls: to list all the files in the current directory, and cd {{ filepath }}: to change the directory. Your aim is to find the location of your project directory. I found mine in /var/app/current
+Once you are in your app you can run source env/bin/activate to start your environment. Now that your environment is started you can run the commands:
+
+```bash
+python manage.py makemigrations pyhton manage.py migrate
+python manage.py createsuperuser
+```
+
+Your project and all its functions should now work!
+
+### My Experience.
+
+My experience deploying my project to AWS was awful, I probably spent 24+ hours on it, as there is very limited documentation. And the best resource was StackOverflow and a few articles are below. The AWS documentation is very vague in most parts, making the developer experience of the AWS console being pretty poor.
+
+### References
+
+Create an Application Source Bundle — AWS Elastic Beanstalk. [https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/applications-sourcebundle.html](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/applications-sourcebundle.html).
+
+WonilWonil 6, et al. “Run Manage.py from AWS EB Linux Instance.” Stack Overflow, 1 Feb. 1961, [https://stackoverflow.com/questions/19997343/run-manage-py-from-aws-eb-linux-instance](https://stackoverflow.com/questions/19997343/run-manage-py-from-aws-eb-linux-instance).
+
+Deploying Django to the AWS Elastic Beanstalk Console. https://ordinarycoders.com/. Retrieved Nov 12, 2022, from [https://ordinarycoders.com/blog/article/deploying-from-aws-eb-console](https://ordinarycoders.com/blog/article/deploying-from-aws-eb-console)
+
+How to Start Django Project with a Database(PostgreSQL). (2022). Medium. Retrieved Nov 12, 2022, from [https://stackpython.medium.com/how-to-start-django-project-with-a-database-postgresql-aaa1d74659d8](https://stackpython.medium.com/how-to-start-django-project-with-a-database-postgresql-aaa1d74659d8)
+
+Python, R.Deploying Django + Python 3 + PostgreSQL to AWS Elastic Beanstalk — Real Python. Retrieved Nov 12, 2022, from [https://realpython.com/deploying-a-django-app-and-postgresql-to-aws-elastic-beanstalk/](https://realpython.com/deploying-a-django-app-and-postgresql-to-aws-elastic-beanstalk/)

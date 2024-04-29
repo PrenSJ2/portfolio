@@ -1,6 +1,6 @@
-import profileImgLarge from '~/assets/profile-large.jpg';
-import profileImgPlaceholder from '~/assets/profile-placeholder.jpg';
-import profileImg from '~/assets/profile.jpg';
+import profileImgLarge from '~/assets/seb-anguilla-large.jpeg';
+import profileImgPlaceholder from '~/assets/seb-anguilla-placeholder.jpeg';
+import profileImg from '~/assets/seb-anguilla.jpeg';
 import { Button } from '~/components/button';
 import { DecoderText } from '~/components/decoder-text';
 import { Divider } from '~/components/divider';
@@ -21,13 +21,11 @@ const ProfileText = ({ visible, titleId }) => (
       <DecoderText text="Hi there" start={visible} delay={500} />
     </Heading>
     <Text className={styles.description} data-visible={visible} size="l" as="p">
-      I’m Seb, currently I live in London, UK working as a junior software engineer at{' '}
+      I’m Seb, currently I live in London, UK working as a Junior Software Engineer at{' '}
       <Link href="https://www.tutorcruncher.com">TutorCruncher</Link>.  My daily grind is
-      an exciting mix of crafting features, troubleshooting errors, managing microservices,
+      an exciting mix of developing features, troubleshooting errors, managing microservices,
       and streamlining CI/CD and DevOps processes. My knack for design also empowers me to
-      swiftly bring attractive and functional ideas to life. Curious about the tech stack
-      that fuels my creativity? Take a peek at my{' '}
-      <Link href="/uses">uses page</Link> to discover the frameworks, languages, and tools in my arsenal.
+      swiftly bring attractive and functional ideas to life.
     </Text>
     <Text className={styles.description} data-visible={visible} size="l" as="p">
       Outside of work, I immerse myself in coding for personal passion projects, indulge
@@ -89,7 +87,7 @@ export const Profile = ({ id, visible, sectionRef }) => {
                   width={960}
                   height={1280}
                   sizes={`(max-width: ${media.mobile}px) 100vw, 480px`}
-                  alt="Me smiling like a goofball at the Qwilr office in Sydney"
+                  alt="Me in Anguilla, a British Overseas Territory in the Caribbean."
                 />
                 <svg className={styles.svg} data-visible={visible} viewBox="0 0 136 766">
                   <use href={`${katakana}#katakana-profile`} />

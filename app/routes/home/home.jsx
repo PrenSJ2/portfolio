@@ -7,9 +7,12 @@ import gamestackTexture from '~/assets/gamestack-login.jpg';
 import sliceTextureLarge from '~/assets/slice-app-large.jpg';
 import sliceTexturePlaceholder from '~/assets/slice-app-placeholder.jpg';
 import sliceTexture from '~/assets/slice-app.jpg';
-import sprTextureLarge from '~/assets/spr-lesson-builder-dark-large.jpg';
-import sprTexturePlaceholder from '~/assets/spr-lesson-builder-dark-placeholder.jpg';
-import sprTexture from '~/assets/spr-lesson-builder-dark.jpg';
+// import sprTextureLarge from '~/assets/spr-lesson-builder-dark-large.jpg';
+// import sprTexturePlaceholder from '~/assets/spr-lesson-builder-dark-placeholder.jpg';
+// import sprTexture from '~/assets/spr-lesson-builder-dark.jpg';
+import teamworksTextureLarge from '~/assets/teamworks/Website-home-large.png';
+import teamworksTexturePlaceholder from '~/assets/teamworks/Website-home-placeholder.png';
+import teamworksTexture from '~/assets/spr-lesson-builder-dark.jpg';
 import { Footer } from '~/components/footer';
 import { baseMeta } from '~/utils/meta';
 import { Intro } from './intro';
@@ -105,16 +108,15 @@ export const Home = () => {
         index={1}
         title="Office Rental Platform and App"
         description="Designed and developed a platform for Teamworks Execuitve Suites to manage office rentals and bookings."
-        buttonText="View website"
-        buttonLink="https://bookteamworks.com"
-        // buttonLink="/projects/smart-sparrow"
+        buttonText="View project"
+        buttonLink="/projects/teamworks"
         model={{
           type: 'laptop',
-          alt: 'Smart Sparrow lesson builder',
+          alt: 'Teamworks Rental Platform',
           textures: [
             {
-              srcSet: `${sprTexture} 1280w, ${sprTextureLarge} 2560w`,
-              placeholder: sprTexturePlaceholder,
+              srcSet: `${teamworksTextureLarge} 1280w, ${teamworksTextureLarge} 2560w`,
+              placeholder: teamworksTexturePlaceholder,
             },
           ],
         }}
@@ -128,7 +130,7 @@ export const Home = () => {
         title="Cocktail App"
         description="Developed a spirit recognition and cocktail recipe app."
         buttonText="View website"
-        buttonLink="https://gamestack.hamishw.com"
+        buttonLink="/projects/voulez-vous"
         model={{
           type: 'phone',
           alt: 'App login screen',
