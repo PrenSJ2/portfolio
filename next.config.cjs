@@ -1,8 +1,11 @@
+const withMDX = require('@next/mdx')({
+  extension: /\.mdx?$/
+});
 
-module.exports = {
+module.exports = withMDX({
   reactStrictMode: true,
   trailingSlash: true,
-  pageExtensions: ['page.js', 'api.js'],
+  pageExtensions: ['page.js', 'api.js', 'md', 'mdx'],
   webpack(config, { isServer }) {
     // Run custom scripts
     if (isServer) {
@@ -19,7 +22,7 @@ module.exports = {
 
     // Import videos, models, hdrs, and fonts
     config.module.rules.push({
-      test: /\.(mp4|hdr|glb|woff|woff2)$/i,
+      test: /\.(hdr|glb|woff|woff2)$/i,
       type: 'asset/resource',
     });
 
@@ -35,6 +38,21 @@ module.exports = {
       type: 'asset/source',
     });
 
+    // Import `.mp4` files
+    config.module.rules.push({
+      test: /\.mp4$/,
+      use: [
+        {
+          loader: 'file-loader',
+          options: {
+            name: '[name].[ext]',
+            outputPath: 'static/',
+            publicPath: '_next/static/',
+          },
+        },
+      ],
+    });
+
     return config;
   },
-};
+});
