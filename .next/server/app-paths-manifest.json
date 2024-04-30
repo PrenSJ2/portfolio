@@ -1,0 +1,12 @@
+{
+  "/routes/home/route": "app/routes/home/route.js",
+  "/routes/articles/route": "app/routes/articles/route.js",
+  "/routes/articles_._index/route": "app/routes/articles_._index/route.js",
+  "/routes/projects.slice/route": "app/routes/projects.slice/route.js",
+  "/routes/projects.smart-sparrow/route": "app/routes/projects.smart-sparrow/route.js",
+  "/routes/projects.volkihar-knight/route": "app/routes/projects.volkihar-knight/route.js",
+  "/routes/uses/route": "app/routes/uses/route.js",
+  "/routes/projects.teamworks/route": "app/routes/projects.teamworks/route.js",
+  "/routes/projects.voulez-vous/route": "app/routes/projects.voulez-vous/route.js",
+  "/components/icon/icon/route": "app/components/icon/icon/route.js"
+}
