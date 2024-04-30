@@ -34,7 +34,7 @@ to save all the project dependencies.
 Create .ebextensions/django.config. In order to run the application on EC2 elastic beanstalk a .ebextensions folder needs to be created inside the project directory. Inside
 the .ebextensions folder create a file named django.config, Inside the django.config:
 
-```
+```txt
 option_settings: aws:elasticbeanstalk:container:python:
 WSGIPath: {{Your app name}}.wsgi:application
 ```
@@ -43,14 +43,14 @@ Allowed hosts. In order for the application to recognize the EC2 container when
 
 deployed edit the settings.py file and change/add:
 
-```
+```txt
 ALLOWED_HOSTS =[‘*’]
 ```
 
 ### Zip project for upload
 Zip your project directory in preparation to create the EC2 on elastic beanstalk. On Mac use this command in the project directory to zip the project and all the essential hidden files.
 
-```
+```txt
 zip ../myapp.zip -r * .[^.]*
 ```
 
@@ -59,13 +59,14 @@ Navigate to Elastic Beanstalk on the AWS console, create an application, select 
 
 ### Static Files
 If your site now does not have any styling or static files, first ensure your Django project has the latest static files:
-``
+
+``bash
 python manage.py collectstatic
 ```
 
 then edit the django.config:
 
-```
+```txt
 aws:elasticbeanstalk:environment:proxy:staticfiles: /static: /static
 ```
 
@@ -75,7 +76,7 @@ This will tell the EC2 where your static files are located. You can check that t
 
 Now that your site is deployed with styling you might come across the issue related to the version of SQLite:
 
-```
+```txt
 deterministic = True
 ```
 
@@ -87,7 +88,8 @@ There are currently 2 possible solutions to this problem:
 
 For me, I tried option 2 first as I already have a database filled with sample data. But upon creating a new elastic beanstalk environment on Python 3.7 I discovered a lot of the packages I was using required Python 3.8 or newer. I'm sure I could have pursued this option by downgrading my packages, however with further research it appears SQLite is almost never used in actual deployment, thus I went with option 1.
 
-Switching to Postgresql. Assuming you already have Postgres downloaded locally, open pg_admin and create a database. Once the database is created navigate to settings.py and change the DATABASES = { sql…etc} to:
+Switching to Postgresql. Assuming you already have Postgres downloaded locally, open pg_admin and create a database. Once the database is created navigate to settings.py and change the DATABASES = `{ sql…etc}` to:
+
 if ‘RDS_DB_NAME’ in os.environ:
 
 ```txt
@@ -172,7 +174,7 @@ Head over to IAM in the AWS console, then create a user and add the permission �
 eb ssh
 ```
 
-Once you are connected, use a combination of ls: to list all the files in the current directory, and cd {{ filepath }}: to change the directory. Your aim is to find the location of your project directory. I found mine in /var/app/current
+Once you are connected, use a combination of ls: to list all the files in the current directory, and cd `{{ filepath }}`: to change the directory. Your aim is to find the location of your project directory. I found mine in /var/app/current
 Once you are in your app you can run source env/bin/activate to start your environment. Now that your environment is started you can run the commands:
 
 ```bash

@@ -1,12 +1,12 @@
-import gamestackTexture2Large from '~/assets/gamestack-list-large.jpg';
-import gamestackTexture2Placeholder from '~/assets/gamestack-list-placeholder.jpg';
-import gamestackTexture2 from '~/assets/gamestack-list.jpg';
-import gamestackTextureLarge from '~/assets/gamestack-login-large.jpg';
-import gamestackTexturePlaceholder from '~/assets/gamestack-login-placeholder.jpg';
-import gamestackTexture from '~/assets/gamestack-login.jpg';
-import sliceTextureLarge from '~/assets/slice-app-large.jpg';
-import sliceTexturePlaceholder from '~/assets/slice-app-placeholder.jpg';
-import sliceTexture from '~/assets/slice-app.jpg';
+import vvLoginLarge from '~/assets/VV-login-large.png';
+import vvLoginPlaceholder from '~/assets/VV-login-placeholder.png';
+import vvLogin from '~/assets/VV-login.png';
+import vvScanLarge from '~/assets/VV-scan-large.png';
+import vvScanPlaceholder from '~/assets/VV-scan-placeholder.png';
+import vvScan from '~/assets/VV-scan.png';
+import towfoodLarge from '~/assets/towfood-large.png';
+import towfoodPlaceholder from '~/assets/towfood-placeholder.png';
+import towfood from '~/assets/towfood.png';
 // import sprTextureLarge from '~/assets/spr-lesson-builder-dark-large.jpg';
 // import sprTexturePlaceholder from '~/assets/spr-lesson-builder-dark-placeholder.jpg';
 // import sprTexture from '~/assets/spr-lesson-builder-dark.jpg';
@@ -137,12 +137,12 @@ export const Home = () => {
           alt: 'App login screen',
           textures: [
             {
-              srcSet: `${gamestackTexture} 375w, ${gamestackTextureLarge} 750w`,
-              placeholder: gamestackTexturePlaceholder,
+              srcSet: `${vvLogin} 375w, ${vvLoginLarge} 750w`,
+              placeholder: vvLoginPlaceholder,
             },
             {
-              srcSet: `${gamestackTexture2} 375w, ${gamestackTexture2Large} 750w`,
-              placeholder: gamestackTexture2Placeholder,
+              srcSet: `${vvScan} 375w, ${vvScanLarge} 750w`,
+              placeholder: vvScanPlaceholder,
             },
           ],
         }}
@@ -155,14 +155,15 @@ export const Home = () => {
         title="Larder Inventory Management System"
         description="Designed and developed a system for Tow Food Larders to manage inventory and orders."
         buttonText="View project"
-        buttonLink="/projects/slice"
+        // buttonLink="/projects/slice"
+        buttonLink="https://github.com/PrenSJ2/TowFood-PWA"
         model={{
           type: 'laptop',
-          alt: 'Annotating a biomedical image in the Slice app',
+          alt: 'App with report screen',
           textures: [
             {
-              srcSet: `${sliceTexture} 800w, ${sliceTextureLarge} 1920w`,
-              placeholder: sliceTexturePlaceholder,
+              srcSet: `${towfood} 800w, ${towfoodLarge} 1920w`,
+              placeholder: towfoodPlaceholder,
             },
           ],
         }}
