@@ -127,10 +127,11 @@ export const Home = () => {
         sectionRef={projectTwo}
         visible={visibleSections.includes(projectTwo.current)}
         index={2}
-        title="Cocktail App"
+        title="Voulez Vous App"
         description="Developed a spirit recognition and cocktail recipe app."
-        buttonText="View website"
-        buttonLink="/projects/voulez-vous"
+        buttonText="View App"
+        buttonLink="https://voulezvous.app/"
+        // buttonLink="/projects/voulez-vous"
         model={{
           type: 'phone',
           alt: 'App login screen',
