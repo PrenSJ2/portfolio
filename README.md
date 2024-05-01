@@ -3,9 +3,11 @@
 </p>
 <h1 align="center">Personal portfolio</h1>
 
-[![Site preview](/public/site-preview.png)](https://hamishw.com)
+[![Site preview](/public/site-preview.png)](https://seb.onlineolive.xyz)
 
-My design portfolio to showcase a few projects. Built with [Remix](https://remix.run/), [Three.js](https://threejs.org/), and [Framer Motion](https://www.framer.com/motion/). View the [live site](https://hamishw.com) or check out a live version of the [components storybook](https://storybook.hamishw.com).
+
+my portfolio, based off of [Hamish Williams' portfolio](https://github.com/HamishMW/portfolio)
+
 
 ## Install & run
 
