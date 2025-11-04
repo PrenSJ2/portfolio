@@ -3,9 +3,13 @@ const withMDX = require('@next/mdx')({
 });
 
 module.exports = withMDX({
+  output: 'export',
   reactStrictMode: true,
   trailingSlash: true,
   pageExtensions: ['page.js', 'api.js', 'md', 'mdx'],
+  images: {
+    unoptimized: true,
+  },
   webpack(config, { isServer }) {
     // Run custom scripts
     if (isServer) {
