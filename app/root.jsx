@@ -52,20 +52,28 @@ export const loader = async ({ request, context }) => {
   const pathnameSliced = pathname.endsWith('/') ? pathname.slice(0, -1) : url;
   const canonicalUrl = `${config.url}${pathnameSliced}`;
 
-  const { getSession, commitSession } = createCookieSessionStorage({
+  const { getSession, commitSession, destroySession } = createCookieSessionStorage({
     cookie: {
       name: '__session',
       httpOnly: true,
       maxAge: 604_800,
       path: '/',
       sameSite: 'lax',
-      secrets: [context.cloudflare.env.SESSION_SECRET || ' '],
+      secrets: [context.cloudflare.env.SESSION_SECRET || 'default-secret'],
       secure: true,
     },
   });
 
-  const session = await getSession(request.headers.get('Cookie'));
-  const theme = session.get('theme') || 'dark';
+  let session;
+  let theme = 'dark';
+
+  try {
+    session = await getSession(request.headers.get('Cookie'));
+    theme = session.get('theme') || 'dark';
+  } catch (error) {
+    // Cookie is corrupted, create a fresh session
+    session = await getSession();
+  }
 
   return json(
     { canonicalUrl, theme },
