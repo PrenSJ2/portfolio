@@ -299,37 +299,48 @@ async function takeScreenshots(url, assetsDir) {
     screenshots.push({ filename: 'screenshot-hero.png', type: 'hero' });
     console.log('   ✅ Captured: hero screenshot (desktop)');
 
-    // Screenshot 2: Full page (desktop) - useful for showing the whole site
-    const fullPath = path.join(assetsDir, 'screenshot-full.png');
-    await page.screenshot({
-      path: fullPath,
-      type: 'png',
-      fullPage: true,
-    });
-    screenshots.push({ filename: 'screenshot-full.png', type: 'full' });
-    console.log('   ✅ Captured: full page screenshot');
+    // Get page dimensions
+    const pageHeight = await page.evaluate(() => document.body.scrollHeight);
+    const viewportHeight = 1080;
+    const scrollableHeight = pageHeight - viewportHeight;
 
-    // Scroll down and take another screenshot (middle section)
-    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
-    await new Promise((r) => setTimeout(r, 1000));
-    const section1Path = path.join(assetsDir, 'screenshot-section1.png');
-    await page.screenshot({
-      path: section1Path,
-      type: 'png',
-    });
-    screenshots.push({ filename: 'screenshot-section1.png', type: 'section' });
-    console.log('   ✅ Captured: section 1 screenshot');
+    // Only take section screenshots if page has enough content to scroll
+    if (scrollableHeight > viewportHeight * 0.5) {
+      // Scroll to 33% of page
+      await page.evaluate((y) => window.scrollTo(0, y), Math.floor(scrollableHeight * 0.33));
+      await new Promise((r) => setTimeout(r, 1000));
+      const section1Path = path.join(assetsDir, 'screenshot-section1.png');
+      await page.screenshot({
+        path: section1Path,
+        type: 'png',
+      });
+      screenshots.push({ filename: 'screenshot-section1.png', type: 'section' });
+      console.log('   ✅ Captured: section 1 screenshot (33% scroll)');
 
-    // Scroll more and take another screenshot
-    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
-    await new Promise((r) => setTimeout(r, 1000));
-    const section2Path = path.join(assetsDir, 'screenshot-section2.png');
-    await page.screenshot({
-      path: section2Path,
-      type: 'png',
-    });
-    screenshots.push({ filename: 'screenshot-section2.png', type: 'section' });
-    console.log('   ✅ Captured: section 2 screenshot');
+      // Scroll to 66% of page
+      await page.evaluate((y) => window.scrollTo(0, y), Math.floor(scrollableHeight * 0.66));
+      await new Promise((r) => setTimeout(r, 1000));
+      const section2Path = path.join(assetsDir, 'screenshot-section2.png');
+      await page.screenshot({
+        path: section2Path,
+        type: 'png',
+      });
+      screenshots.push({ filename: 'screenshot-section2.png', type: 'section' });
+      console.log('   ✅ Captured: section 2 screenshot (66% scroll)');
+
+      // Scroll to bottom
+      await page.evaluate((y) => window.scrollTo(0, y), scrollableHeight);
+      await new Promise((r) => setTimeout(r, 1000));
+      const section3Path = path.join(assetsDir, 'screenshot-section3.png');
+      await page.screenshot({
+        path: section3Path,
+        type: 'png',
+      });
+      screenshots.push({ filename: 'screenshot-section3.png', type: 'section' });
+      console.log('   ✅ Captured: section 3 screenshot (bottom)');
+    } else {
+      console.log('   ℹ️  Page has limited scroll content, skipping section screenshots');
+    }
 
     // Mobile viewport screenshot
     await page.setViewport({ width: 375, height: 812 });
