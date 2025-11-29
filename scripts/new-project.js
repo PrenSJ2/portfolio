@@ -656,16 +656,21 @@ import ${varName}TexturePlaceholder from '~/assets/${slug}/${imageFilename}';`;
 
   // Find existing ProjectSummary components and shift their indices
   // We need to increment all existing project indices by 1
+  // Process in reverse order to avoid replacing index={1} before index={10}
   for (let i = projectRefMatches.length; i >= 1; i--) {
     const oldIndex = i;
     const newIndex = i + 1;
+
+    // Replace id="project-X" with id="project-X+1"
     const oldId = `id="project-${oldIndex}"`;
     const newId = `id="project-${newIndex}"`;
-    homeContent = homeContent.replace(new RegExp(oldId, 'g'), newId);
+    homeContent = homeContent.replace(new RegExp(oldId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), newId);
 
+    // Replace index={X} with index={X+1} - be careful to match exactly
     const oldIndexProp = `index={${oldIndex}}`;
     const newIndexProp = `index={${newIndex}}`;
-    homeContent = homeContent.replace(new RegExp(oldIndexProp, 'g'), newIndexProp);
+    // Use word boundary-like matching to avoid partial replacements
+    homeContent = homeContent.replace(new RegExp(`index=\\{${oldIndex}\\}`, 'g'), `index={${newIndex}}`);
   }
 
   // Also update ref assignments (projectOne -> projectTwo, etc.) but we need to be careful

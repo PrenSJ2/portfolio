@@ -6,6 +6,7 @@ import {
   ProjectHeader,
   ProjectImage,
   ProjectSection,
+  ProjectSectionColumns,
   ProjectSectionContent,
   ProjectSectionHeading,
   ProjectSectionText,
@@ -15,12 +16,16 @@ import { Fragment } from 'react';
 import { media } from '~/utils/style';
 import { baseMeta } from '~/utils/meta';
 import styles from './ancient-bots.module.css';
-import ancientBotsImage0 from '~/assets/ancient-bots/image-0.png';
-import ancientBotsImage0Placeholder from '~/assets/ancient-bots/image-0.png';
+import ancientBotsImage0 from '~/assets/ancient-bots/screenshot-hero.png';
+import ancientBotsImage1 from '~/assets/ancient-bots/screenshot-full.png';
+import ancientBotsImage2 from '~/assets/ancient-bots/screenshot-section1.png';
+import ancientBotsImage3 from '~/assets/ancient-bots/screenshot-section2.png';
+import ancientBotsImage4 from '~/assets/ancient-bots/screenshot-mobile.png';
+import ancientBotsImage5 from '~/assets/ancient-bots/image-0.png';
 
 const title = 'Ancient Bots: AI-Powered Social Media Content Generator';
-const description = 'A web-based platform leveraging AI to transform social media strategy by generating viral posts, thumbnails, and engaging captions.';
-const roles = ['AI Developer', 'Web Developer', 'UX/UI Designer', 'Content Strategist'];
+const description = 'Transformed social media presence with AI, generating eye-catching content and posts.';
+const roles = ['AI Implementation', 'UI/UX Design', 'Back-End Development', 'Front-End Development', 'Database Management', 'API Integration'];
 
 export const meta = () => {
   return baseMeta({ title, description, prefix: 'Projects' });
@@ -35,7 +40,7 @@ export const AncientBots = () => {
           srcSet={`${ancientBotsImage0} 1280w, ${ancientBotsImage0} 2560w`}
           width={1280}
           height={800}
-          placeholder={ancientBotsImage0Placeholder}
+          placeholder={ancientBotsImage0}
           opacity={0.8}
         />
         <ProjectHeader
@@ -50,7 +55,7 @@ export const AncientBots = () => {
               srcSet={`${ancientBotsImage0} 800w, ${ancientBotsImage0} 1920w`}
               width={800}
               height={500}
-              placeholder={ancientBotsImage0Placeholder}
+              placeholder={ancientBotsImage0}
               alt="Ancient Bots: AI-Powered Social Media Content Generator"
               sizes={`(max-width: ${media.mobile}px) 100vw, (max-width: ${media.tablet}px) 90vw, 80vw`}
             />
@@ -61,9 +66,52 @@ export const AncientBots = () => {
         <ProjectSection>
           <ProjectSectionContent>
             <ProjectTextRow>
-              <ProjectSectionHeading>AI-Powered Content Generation</ProjectSectionHeading>
+              <ProjectSectionHeading>AI-Driven Content Generation</ProjectSectionHeading>
               <ProjectSectionText>
-                Deployed autonomous AI agents to generate professional social media content in under 30 seconds. AI algorithms analyze successful posts for optimal engagement and viral content patterns.
+                Developed an AI bot that understands trends and engagement patterns, providing optimal content strategies.
+              </ProjectSectionText>
+            </ProjectTextRow>
+            <Image
+              srcSet={`${ancientBotsImage1} 800w, ${ancientBotsImage1} 1920w`}
+              width={800}
+              height={500}
+              placeholder={ancientBotsImage1}
+              alt="AI bot content generation interface"
+              sizes={`(max-width: ${media.mobile}px) 100vw, 80vw`}
+            />
+          </ProjectSectionContent>
+        </ProjectSection>
+
+        <ProjectSection light>
+          <ProjectSectionColumns>
+            <ProjectSectionContent>
+              <ProjectTextRow>
+                <ProjectSectionHeading>Smart Template System</ProjectSectionHeading>
+                <ProjectSectionText>
+                  Created a range of professionally designed templates optimized for various social media platforms.
+                </ProjectSectionText>
+              </ProjectTextRow>
+            </ProjectSectionContent>
+            <div className={styles.sidebarImages}>
+              <Image
+                className={styles.sidebarImage}
+                srcSet={`${ancientBotsImage2} 350w, ${ancientBotsImage2} 700w`}
+                width={350}
+                height={750}
+                placeholder={ancientBotsImage2}
+                alt="Templates selection interface"
+                sizes={`(max-width: ${media.mobile}px) 200px, 343px`}
+              />
+            </div>
+          </ProjectSectionColumns>
+        </ProjectSection>
+
+        <ProjectSection>
+          <ProjectSectionContent>
+            <ProjectTextRow>
+              <ProjectSectionHeading>Rapid Content Creation</ProjectSectionHeading>
+              <ProjectSectionText>
+                Implemented AI algorithms for generating professional social media content in under 30 seconds.
               </ProjectSectionText>
             </ProjectTextRow>
           </ProjectSectionContent>
@@ -72,42 +120,52 @@ export const AncientBots = () => {
         <ProjectSection light>
           <ProjectSectionContent>
             <ProjectTextRow>
-              <ProjectSectionHeading>Smart Template System</ProjectSectionHeading>
+              <ProjectSectionHeading>Viral Content Optimization</ProjectSectionHeading>
               <ProjectSectionText>
-                Implemented hundreds of professionally designed templates optimized for various social platforms, ensuring brand consistency across all channels.
+                Incorporated an AI that analyzes successful posts to optimize content for viral marketing and engagement.
               </ProjectSectionText>
             </ProjectTextRow>
+            <Image
+              srcSet={`${ancientBotsImage3} 800w, ${ancientBotsImage3} 1920w`}
+              width={800}
+              height={500}
+              placeholder={ancientBotsImage3}
+              alt="Viral content optimization dashboard"
+              sizes={`(max-width: ${media.mobile}px) 100vw, 80vw`}
+            />
           </ProjectSectionContent>
         </ProjectSection>
 
         <ProjectSection>
-          <ProjectSectionContent>
-            <ProjectTextRow>
-              <ProjectSectionHeading>Integration with Social Media Platforms</ProjectSectionHeading>
-              <ProjectSectionText>
-                Ensured seamless integration with all major social media platforms, allowing users to generate and schedule content directly from Ancient Bots.
-              </ProjectSectionText>
-            </ProjectTextRow>
-          </ProjectSectionContent>
+          <ProjectSectionColumns>
+            <ProjectSectionContent>
+              <ProjectTextRow>
+                <ProjectSectionHeading>Brand Consistency</ProjectSectionHeading>
+                <ProjectSectionText>
+                  Built features to maintain brand voice and visual identity across all platforms and content.
+                </ProjectSectionText>
+              </ProjectTextRow>
+            </ProjectSectionContent>
+            <div className={styles.sidebarImages}>
+              <Image
+                className={styles.sidebarImage}
+                srcSet={`${ancientBotsImage4} 350w, ${ancientBotsImage4} 700w`}
+                width={350}
+                height={750}
+                placeholder={ancientBotsImage4}
+                alt="Brand consistency settings"
+                sizes={`(max-width: ${media.mobile}px) 200px, 343px`}
+              />
+            </div>
+          </ProjectSectionColumns>
         </ProjectSection>
 
         <ProjectSection light>
           <ProjectSectionContent>
             <ProjectTextRow>
-              <ProjectSectionHeading>Transparent Pricing and Free Trial</ProjectSectionHeading>
+              <ProjectSectionHeading>Multi-Platform Support</ProjectSectionHeading>
               <ProjectSectionText>
-                Offered flexible pricing models and a free trial to attract a wide range of users, from solo creators to enterprise teams.
-              </ProjectSectionText>
-            </ProjectTextRow>
-          </ProjectSectionContent>
-        </ProjectSection>
-
-        <ProjectSection>
-          <ProjectSectionContent>
-            <ProjectTextRow>
-              <ProjectSectionHeading>User-Friendly Interface</ProjectSectionHeading>
-              <ProjectSectionText>
-                Designed an intuitive, user-friendly interface enabling users to easily customize their AI-generated content and see changes instantly.
+                Enabled content creation optimized for all major social media platforms, ensuring perfect sizing and formatting.
               </ProjectSectionText>
             </ProjectTextRow>
           </ProjectSectionContent>

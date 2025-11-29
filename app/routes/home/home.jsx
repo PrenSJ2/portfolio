@@ -7,14 +7,14 @@ import vvScan from '~/assets/VV-scan.png';
 import towfoodLarge from '~/assets/towfood-large.png';
 import towfoodPlaceholder from '~/assets/towfood-placeholder.png';
 import towfood from '~/assets/towfood.png';
-import ancientBotsTexture from '~/assets/ancient-bots/image-0.png';
-import ancientBotsTexturePlaceholder from '~/assets/ancient-bots/image-0.png';
 // import sprTextureLarge from '~/assets/spr-lesson-builder-dark-large.jpg';
 // import sprTexturePlaceholder from '~/assets/spr-lesson-builder-dark-placeholder.jpg';
 // import sprTexture from '~/assets/spr-lesson-builder-dark.jpg';
 import teamworksTextureLarge from '~/assets/teamworks/Website-home-large.png';
 import teamworksTexturePlaceholder from '~/assets/teamworks/Website-home-placeholder.png';
 import teamworksTexture from '~/assets/spr-lesson-builder-dark.jpg';
+import ancientBotsTexture from '~/assets/ancient-bots/screenshot-hero.png';
+import ancientBotsTexturePlaceholder from '~/assets/ancient-bots/screenshot-hero.png';
 import { Footer } from '~/components/footer';
 import { baseMeta } from '~/utils/meta';
 import { Intro } from './intro';
@@ -106,9 +106,29 @@ export const Home = () => {
       />
       <ProjectSummary
         id="project-1"
+        sectionRef={projectFour}
+        visible={visibleSections.includes(projectFour.current)}
+        index={1}
+        title="Revolutionizing Social Media with AI"
+        description="AI-powered platform generating engaging, viral social media content."
+        buttonText="View project"
+        buttonLink="/projects/ancient-bots"
+        model={{
+          type: 'laptop',
+          alt: 'Revolutionizing Social Media with AI',
+          textures: [
+            {
+              srcSet: `${ancientBotsTexture} 800w, ${ancientBotsTexture} 1920w`,
+              placeholder: ancientBotsTexturePlaceholder,
+            },
+          ],
+        }}
+      />
+      <ProjectSummary
+        id="project-2"
         sectionRef={projectOne}
         visible={visibleSections.includes(projectOne.current)}
-        index={1}
+        index={2}
         title="Office Rental Platform and App"
         description="Designed and developed a platform for Teamworks Execuitve Suites to manage office rentals and bookings."
         buttonText="View project"
@@ -125,11 +145,11 @@ export const Home = () => {
         }}
       />
       <ProjectSummary
-        id="project-2"
+        id="project-3"
         alternate
         sectionRef={projectTwo}
         visible={visibleSections.includes(projectTwo.current)}
-        index={2}
+        index={3}
         title="Voulez Vous App"
         description="Developed a spirit recognition and cocktail recipe app."
         buttonText="View App"
@@ -151,10 +171,10 @@ export const Home = () => {
         }}
       />
       <ProjectSummary
-        id="project-3"
+        id="project-4"
         sectionRef={projectThree}
         visible={visibleSections.includes(projectThree.current)}
-        index={3}
+        index={4}
         title="Larder Inventory Management System"
         description="Designed and developed a system for Tow Food Larders to manage inventory and orders."
         buttonText="View project"
@@ -167,27 +187,6 @@ export const Home = () => {
             {
               srcSet: `${towfood} 800w, ${towfoodLarge} 1920w`,
               placeholder: towfoodPlaceholder,
-            },
-          ],
-        }}
-      />
-      <ProjectSummary
-        id="project-4"
-        alternate
-        sectionRef={projectFour}
-        visible={visibleSections.includes(projectFour.current)}
-        index={4}
-        title="Ancient Bots"
-        description="AI-powered social media content generator that creates stunning posts, thumbnails, and captions in seconds."
-        buttonText="View project"
-        buttonLink="/projects/ancient-bots"
-        model={{
-          type: 'laptop',
-          alt: 'Ancient Bots AI Content Generator',
-          textures: [
-            {
-              srcSet: `${ancientBotsTexture} 800w, ${ancientBotsTexture} 1920w`,
-              placeholder: ancientBotsTexturePlaceholder,
             },
           ],
         }}
