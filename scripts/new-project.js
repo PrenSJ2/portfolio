@@ -20,6 +20,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import https from 'https';
 import http from 'http';
+import puppeteer from 'puppeteer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -165,9 +166,10 @@ Generate a JSON response with the following structure:
     {
       "heading": "Section heading",
       "content": "2-3 sentences describing this aspect of the project",
-      "type": "text" // or "columns" for side-by-side layout
+      "layout": "text", // "text" for text only, "image" for text with full-width image, "columns" for text with sidebar images
+      "imageAlt": "Description of what the image shows" // only if layout is "image" or "columns"
     }
-  ], // 3-5 sections
+  ], // 4-6 sections, alternate between layouts for visual variety. At least 2 should have images.
   "homePage": {
     "title": "Short catchy title for home page (max 50 chars)",
     "description": "One sentence description for home page preview (max 120 chars)",
@@ -176,7 +178,8 @@ Generate a JSON response with the following structure:
 }
 
 Make the content professional and highlight the technical achievements and impact. Focus on what was built and the outcomes.
-For modelType: use "phone" only if this is primarily a mobile app (iOS/Android). For websites, web apps, dashboards, SaaS products, use "laptop".`;
+For modelType: use "phone" only if this is primarily a mobile app (iOS/Android). For websites, web apps, dashboards, SaaS products, use "laptop".
+For sections: create visually rich pages by using "image" layout for sections where showing a screenshot would help, and "columns" for feature highlights.`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -262,6 +265,97 @@ function getImageExtension(url) {
   return '.jpg'; // Default
 }
 
+// Take screenshots of the website using Puppeteer
+async function takeScreenshots(url, assetsDir) {
+  const screenshots = [];
+
+  console.log('   Launching browser...');
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
+
+  try {
+    const page = await browser.newPage();
+
+    // Desktop viewport for main screenshots
+    await page.setViewport({ width: 1920, height: 1080 });
+
+    console.log('   Loading page...');
+    await page.goto(url, {
+      waitUntil: 'networkidle2',
+      timeout: 60000,
+    });
+
+    // Wait a bit for any animations/lazy loading
+    await new Promise((r) => setTimeout(r, 2000));
+
+    // Screenshot 1: Hero/above the fold (desktop)
+    const heroPath = path.join(assetsDir, 'screenshot-hero.png');
+    await page.screenshot({
+      path: heroPath,
+      type: 'png',
+    });
+    screenshots.push({ filename: 'screenshot-hero.png', type: 'hero' });
+    console.log('   ✅ Captured: hero screenshot (desktop)');
+
+    // Screenshot 2: Full page (desktop) - useful for showing the whole site
+    const fullPath = path.join(assetsDir, 'screenshot-full.png');
+    await page.screenshot({
+      path: fullPath,
+      type: 'png',
+      fullPage: true,
+    });
+    screenshots.push({ filename: 'screenshot-full.png', type: 'full' });
+    console.log('   ✅ Captured: full page screenshot');
+
+    // Scroll down and take another screenshot (middle section)
+    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
+    await new Promise((r) => setTimeout(r, 1000));
+    const section1Path = path.join(assetsDir, 'screenshot-section1.png');
+    await page.screenshot({
+      path: section1Path,
+      type: 'png',
+    });
+    screenshots.push({ filename: 'screenshot-section1.png', type: 'section' });
+    console.log('   ✅ Captured: section 1 screenshot');
+
+    // Scroll more and take another screenshot
+    await page.evaluate(() => window.scrollBy(0, window.innerHeight));
+    await new Promise((r) => setTimeout(r, 1000));
+    const section2Path = path.join(assetsDir, 'screenshot-section2.png');
+    await page.screenshot({
+      path: section2Path,
+      type: 'png',
+    });
+    screenshots.push({ filename: 'screenshot-section2.png', type: 'section' });
+    console.log('   ✅ Captured: section 2 screenshot');
+
+    // Mobile viewport screenshot
+    await page.setViewport({ width: 375, height: 812 });
+    await page.goto(url, {
+      waitUntil: 'networkidle2',
+      timeout: 60000,
+    });
+    await new Promise((r) => setTimeout(r, 2000));
+
+    const mobilePath = path.join(assetsDir, 'screenshot-mobile.png');
+    await page.screenshot({
+      path: mobilePath,
+      type: 'png',
+    });
+    screenshots.push({ filename: 'screenshot-mobile.png', type: 'mobile' });
+    console.log('   ✅ Captured: mobile screenshot');
+
+  } catch (error) {
+    console.log(`   ⚠️  Screenshot error: ${error.message}`);
+  } finally {
+    await browser.close();
+  }
+
+  return screenshots;
+}
+
 // Create slug from project name
 function createSlug(name) {
   return name
@@ -276,16 +370,87 @@ function toCamelCase(slug) {
 }
 
 // Generate the JSX route file
-function generateJSXFile(projectName, slug, content, imageImports) {
+function generateJSXFile(projectName, slug, content, allImages) {
   const sections = content.sections || [];
   const varName = toCamelCase(slug);
 
+  // Find specific image types
+  const heroImage = allImages.find((img) => img.type === 'hero') || allImages[0];
+  const sectionImages = allImages.filter((img) => img.type === 'section' || img.type === 'full');
+  const mobileImage = allImages.find((img) => img.type === 'mobile');
+
+  // Create image imports
+  const imageImportStatements = allImages
+    .map((img, i) => {
+      const imgVarName = `${varName}Image${i}`;
+      return `import ${imgVarName} from '~/assets/${slug}/${img.filename}';`;
+    })
+    .join('\n');
+
+  // Generate sections with images distributed throughout
+  let imageIndex = 1; // Start at 1 since 0 is the hero
   const sectionComponents = sections
     .map((section, index) => {
       const isLight = index % 2 === 1;
       const lightProp = isLight ? ' light' : '';
+      const layout = section.layout || 'text';
+      const imageAlt = section.imageAlt || section.heading;
 
-      return `
+      // Check if this section should have an image
+      const hasImage = (layout === 'image' || layout === 'columns') && imageIndex < allImages.length;
+      const currentImageVar = hasImage ? `${varName}Image${imageIndex}` : null;
+      if (hasImage) imageIndex++;
+
+      if (layout === 'columns' && hasImage) {
+        // Column layout with sidebar image
+        return `
+        <ProjectSection${lightProp}>
+          <ProjectSectionColumns>
+            <ProjectSectionContent>
+              <ProjectTextRow>
+                <ProjectSectionHeading>${section.heading}</ProjectSectionHeading>
+                <ProjectSectionText>
+                  ${section.content}
+                </ProjectSectionText>
+              </ProjectTextRow>
+            </ProjectSectionContent>
+            <div className={styles.sidebarImages}>
+              <Image
+                className={styles.sidebarImage}
+                srcSet={\`\${${currentImageVar}} 350w, \${${currentImageVar}} 700w\`}
+                width={350}
+                height={750}
+                placeholder={${currentImageVar}}
+                alt="${imageAlt.replace(/"/g, '\\"')}"
+                sizes={\`(max-width: \${media.mobile}px) 200px, 343px\`}
+              />
+            </div>
+          </ProjectSectionColumns>
+        </ProjectSection>`;
+      } else if (layout === 'image' && hasImage) {
+        // Full width image section
+        return `
+        <ProjectSection${lightProp}>
+          <ProjectSectionContent>
+            <ProjectTextRow>
+              <ProjectSectionHeading>${section.heading}</ProjectSectionHeading>
+              <ProjectSectionText>
+                ${section.content}
+              </ProjectSectionText>
+            </ProjectTextRow>
+            <Image
+              srcSet={\`\${${currentImageVar}} 800w, \${${currentImageVar}} 1920w\`}
+              width={800}
+              height={500}
+              placeholder={${currentImageVar}}
+              alt="${imageAlt.replace(/"/g, '\\"')}"
+              sizes={\`(max-width: \${media.mobile}px) 100vw, 80vw\`}
+            />
+          </ProjectSectionContent>
+        </ProjectSection>`;
+      } else {
+        // Text only section
+        return `
         <ProjectSection${lightProp}>
           <ProjectSectionContent>
             <ProjectTextRow>
@@ -296,33 +461,28 @@ function generateJSXFile(projectName, slug, content, imageImports) {
             </ProjectTextRow>
           </ProjectSectionContent>
         </ProjectSection>`;
+      }
     })
     .join('\n');
 
-  const imageImportStatements = imageImports
-    .map(
-      (img, i) =>
-        `import ${varName}Image${i} from '~/assets/${slug}/${img.filename}';\nimport ${varName}Image${i}Placeholder from '~/assets/${slug}/${img.filename}';`
-    )
-    .join('\n');
+  const backgroundVar = heroImage ? `${varName}Image0` : 'placeholderBg';
 
-  const heroImageSection = imageImports.length > 0 ? `
+  const heroImageSection = heroImage
+    ? `
         <ProjectSection padding="top">
           <ProjectSectionContent>
             <ProjectImage
               srcSet={\`\${${varName}Image0} 800w, \${${varName}Image0} 1920w\`}
               width={800}
               height={500}
-              placeholder={${varName}Image0Placeholder}
+              placeholder={${varName}Image0}
               alt="${content.title.replace(/"/g, '\\"')}"
               sizes={\`(max-width: \${media.mobile}px) 100vw, (max-width: \${media.tablet}px) 90vw, 80vw\`}
             />
           </ProjectSectionContent>
         </ProjectSection>
-` : '';
-
-  const backgroundVar = imageImports.length > 0 ? `${varName}Image0` : 'placeholderBg';
-  const backgroundPlaceholderVar = imageImports.length > 0 ? `${varName}Image0Placeholder` : 'placeholderBg';
+`
+    : '';
 
   const lines = [
     `import { Footer } from '~/components/footer';`,
@@ -333,6 +493,7 @@ function generateJSXFile(projectName, slug, content, imageImports) {
     `  ProjectHeader,`,
     `  ProjectImage,`,
     `  ProjectSection,`,
+    `  ProjectSectionColumns,`,
     `  ProjectSectionContent,`,
     `  ProjectSectionHeading,`,
     `  ProjectSectionText,`,
@@ -366,7 +527,7 @@ function generateJSXFile(projectName, slug, content, imageImports) {
   lines.push('          srcSet={`${' + backgroundVar + '} 1280w, ${' + backgroundVar + '} 2560w`}');
   lines.push(`          width={1280}`);
   lines.push(`          height={800}`);
-  lines.push(`          placeholder={${backgroundPlaceholderVar}}`);
+  lines.push(`          placeholder={${backgroundVar}}`);
   lines.push(`          opacity={0.8}`);
   lines.push(`        />`);
   lines.push(`        <ProjectHeader`);
@@ -443,7 +604,7 @@ function generateRouteFile(projectName, slug) {
 }
 
 // Update home.jsx to add new project at the top
-function updateHomePage(slug, content, hasImages) {
+function updateHomePage(slug, content, heroImage) {
   const homeJsxPath = path.join(rootDir, 'app', 'routes', 'home', 'home.jsx');
   let homeContent = fs.readFileSync(homeJsxPath, 'utf-8');
 
@@ -454,9 +615,12 @@ function updateHomePage(slug, content, hasImages) {
     modelType: 'laptop',
   };
 
+  // Use the hero screenshot filename
+  const imageFilename = heroImage ? heroImage.filename : 'screenshot-hero.png';
+
   // Add import for the new project's texture
-  const newImport = `import ${varName}Texture from '~/assets/${slug}/image-0.png';
-import ${varName}TexturePlaceholder from '~/assets/${slug}/image-0.png';`;
+  const newImport = `import ${varName}Texture from '~/assets/${slug}/${imageFilename}';
+import ${varName}TexturePlaceholder from '~/assets/${slug}/${imageFilename}';`;
 
   // Find the last texture import and add after it
   const lastImportMatch = homeContent.match(/import [a-zA-Z]+Texture(?:Placeholder)? from '~\/assets\/[^']+';/g);
@@ -638,11 +802,15 @@ async function main() {
   console.log(`   ${projectDir}`);
   console.log(`   ${assetsDir}\n`);
 
-  // Download images
-  console.log('📥 Downloading images...\n');
+  // Take screenshots of the website
+  console.log('📸 Taking screenshots...\n');
+  const screenshots = await takeScreenshots(url, assetsDir);
+
+  // Also try to download any images found on the page as backup
+  console.log('\n📥 Downloading additional images...\n');
   const downloadedImages = [];
 
-  for (let i = 0; i < Math.min(scrapedData.images.length, 5); i++) {
+  for (let i = 0; i < Math.min(scrapedData.images.length, 3); i++) {
     const imgUrl = scrapedData.images[i];
     const ext = getImageExtension(imgUrl);
     const filename = `image-${i}${ext}`;
@@ -657,12 +825,14 @@ async function main() {
     }
   }
 
+  // Combine screenshots and downloaded images
+  const allImages = [...screenshots, ...downloadedImages];
   console.log('');
 
   // Generate files
   console.log('📄 Generating project files...\n');
 
-  const jsxContent = generateJSXFile(componentName, slug, content, downloadedImages);
+  const jsxContent = generateJSXFile(componentName, slug, content, allImages);
   const cssContent = generateCSSFile(slug);
   const routeContent = generateRouteFile(componentName, slug);
 
@@ -677,7 +847,9 @@ async function main() {
   // Update home page
   console.log('🏠 Adding project to home page...\n');
   try {
-    updateHomePage(slug, content, downloadedImages.length > 0);
+    // Find the hero screenshot to use for the home page
+    const heroImage = allImages.find((img) => img.type === 'hero') || allImages[0];
+    updateHomePage(slug, content, heroImage);
     console.log('   ✅ Updated home.jsx\n');
   } catch (error) {
     console.log(`   ⚠️  Failed to update home page: ${error.message}`);
