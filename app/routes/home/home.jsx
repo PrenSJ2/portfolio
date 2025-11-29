@@ -109,13 +109,13 @@ export const Home = () => {
         sectionRef={projectFour}
         visible={visibleSections.includes(projectFour.current)}
         index={1}
-        title="Revolutionize Social Media with Ancient Bots"
-        description="AI-powered platform for generating engaging social media content in seconds."
+        title="Ancient Bots: AI for Social Media"
+        description="Automate your social media presence with AI-generated, viral content."
         buttonText="View project"
         buttonLink="/projects/ancient-bots"
         model={{
           type: 'laptop',
-          alt: 'Revolutionize Social Media with Ancient Bots',
+          alt: 'Ancient Bots: AI for Social Media',
           textures: [
             {
               srcSet: `${ancientBotsTexture} 800w, ${ancientBotsTexture} 1920w`,

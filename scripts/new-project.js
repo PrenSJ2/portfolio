@@ -342,6 +342,187 @@ async function takeScreenshots(url, assetsDir) {
       console.log('   ℹ️  Page has limited scroll content, skipping section screenshots');
     }
 
+    // Try to find and click on demo/showcase/try buttons to capture the app in action
+    const demoSelectors = [
+      'a[href*="demo"]',
+      'a[href*="app"]',
+      'a[href*="try"]',
+      'a[href*="dashboard"]',
+      'a[href*="showcase"]',
+      'button:has-text("Try")',
+      'button:has-text("Demo")',
+      'button:has-text("Get Started")',
+      'a:has-text("Try")',
+      'a:has-text("Demo")',
+      'a:has-text("Get Started")',
+      '[class*="demo"]',
+      '[class*="showcase"]',
+      '[id*="demo"]',
+      '[id*="showcase"]',
+    ];
+
+    let foundShowcase = false;
+    for (const selector of demoSelectors) {
+      try {
+        const element = await page.$(selector);
+        if (element) {
+          // Check if it's a link to the same domain or an interactive element
+          const tagName = await element.evaluate((el) => el.tagName.toLowerCase());
+          const href = await element.evaluate((el) => el.href || '');
+
+          // If it's an anchor with href, check if same domain or internal
+          if (tagName === 'a' && href) {
+            const linkUrl = new URL(href, url);
+            const baseUrl = new URL(url);
+
+            // Only follow links on the same domain
+            if (linkUrl.hostname === baseUrl.hostname && linkUrl.pathname !== baseUrl.pathname) {
+              console.log(`   🔗 Found showcase link: ${linkUrl.pathname}`);
+              await page.goto(linkUrl.href, { waitUntil: 'networkidle2', timeout: 30000 });
+              await new Promise((r) => setTimeout(r, 2000));
+
+              const showcasePath = path.join(assetsDir, 'screenshot-showcase.png');
+              await page.screenshot({ path: showcasePath, type: 'png' });
+              screenshots.push({ filename: 'screenshot-showcase.png', type: 'showcase' });
+              console.log('   ✅ Captured: showcase/demo screenshot');
+              foundShowcase = true;
+              break;
+            }
+          } else if (tagName === 'button') {
+            // Try clicking the button to reveal content
+            await element.click();
+            await new Promise((r) => setTimeout(r, 2000));
+
+            const showcasePath = path.join(assetsDir, 'screenshot-showcase.png');
+            await page.screenshot({ path: showcasePath, type: 'png' });
+            screenshots.push({ filename: 'screenshot-showcase.png', type: 'showcase' });
+            console.log('   ✅ Captured: showcase/demo screenshot (after button click)');
+            foundShowcase = true;
+            break;
+          }
+        }
+      } catch (e) {
+        // Selector didn't match, continue
+      }
+    }
+
+    // Look for showcase sections on the page (features, gallery, examples, etc.)
+    if (!foundShowcase) {
+      const sectionSelectors = [
+        '[class*="feature"]',
+        '[class*="showcase"]',
+        '[class*="gallery"]',
+        '[class*="example"]',
+        '[class*="preview"]',
+        '[id*="feature"]',
+        '[id*="showcase"]',
+        '[id*="gallery"]',
+        '#features',
+        '#showcase',
+        '#examples',
+        '#gallery',
+        'section:has(img)',
+      ];
+
+      // Go back to original URL if we navigated away
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+      await new Promise((r) => setTimeout(r, 1000));
+
+      for (const selector of sectionSelectors) {
+        try {
+          const element = await page.$(selector);
+          if (element) {
+            // Scroll element into view
+            await element.evaluate((el) => el.scrollIntoView({ behavior: 'instant', block: 'center' }));
+            await new Promise((r) => setTimeout(r, 1000));
+
+            const showcasePath = path.join(assetsDir, 'screenshot-showcase.png');
+            await page.screenshot({ path: showcasePath, type: 'png' });
+            screenshots.push({ filename: 'screenshot-showcase.png', type: 'showcase' });
+            console.log(`   ✅ Captured: showcase section (${selector})`);
+            foundShowcase = true;
+            break;
+          }
+        } catch (e) {
+          // Selector didn't match, continue
+        }
+      }
+    }
+
+    if (!foundShowcase) {
+      console.log('   ℹ️  No showcase/demo section found');
+    }
+
+    // Look for videos on the page
+    await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 1000));
+
+    const videos = await page.evaluate(() => {
+      const videoSources = [];
+
+      // Check for <video> elements with src
+      document.querySelectorAll('video').forEach((video) => {
+        if (video.src) {
+          videoSources.push({ src: video.src, type: 'video' });
+        }
+        // Check <source> elements inside video
+        video.querySelectorAll('source').forEach((source) => {
+          if (source.src) {
+            videoSources.push({ src: source.src, type: 'video' });
+          }
+        });
+      });
+
+      // Check for video in background styles or data attributes
+      document.querySelectorAll('[data-video-src], [data-src*=".mp4"], [data-src*=".webm"]').forEach((el) => {
+        const src = el.dataset.videoSrc || el.dataset.src;
+        if (src) {
+          videoSources.push({ src, type: 'video' });
+        }
+      });
+
+      // Check for YouTube/Vimeo embeds
+      document.querySelectorAll('iframe[src*="youtube"], iframe[src*="vimeo"]').forEach((iframe) => {
+        videoSources.push({ src: iframe.src, type: 'embed' });
+      });
+
+      return videoSources;
+    });
+
+    if (videos.length > 0) {
+      console.log(`   🎬 Found ${videos.length} video(s) on page`);
+
+      for (let i = 0; i < videos.length; i++) {
+        const video = videos[i];
+
+        if (video.type === 'video' && (video.src.includes('.mp4') || video.src.includes('.webm'))) {
+          try {
+            const videoUrl = new URL(video.src, url).href;
+            const ext = video.src.includes('.webm') ? 'webm' : 'mp4';
+            const videoFilename = `video-${i}.${ext}`;
+            const videoPath = path.join(assetsDir, videoFilename);
+
+            console.log(`   ⬇️  Downloading video: ${videoFilename}`);
+
+            const response = await fetch(videoUrl);
+            if (response.ok) {
+              const buffer = await response.arrayBuffer();
+              fs.writeFileSync(videoPath, Buffer.from(buffer));
+              screenshots.push({ filename: videoFilename, type: 'video', src: videoUrl });
+              console.log(`   ✅ Downloaded: ${videoFilename}`);
+            }
+          } catch (e) {
+            console.log(`   ⚠️  Failed to download video: ${e.message}`);
+          }
+        } else if (video.type === 'embed') {
+          console.log(`   ℹ️  Found embedded video: ${video.src}`);
+          screenshots.push({ filename: null, type: 'embed', src: video.src });
+        }
+      }
+    } else {
+      console.log('   ℹ️  No videos found on page');
+    }
+
     // Mobile viewport screenshot
     await page.setViewport({ width: 375, height: 812 });
     await page.goto(url, {
@@ -629,15 +810,20 @@ function updateHomePage(slug, content, heroImage) {
   // Use the hero screenshot filename
   const imageFilename = heroImage ? heroImage.filename : 'screenshot-hero.png';
 
-  // Add import for the new project's texture
+  // Add import for the new project's texture (only if not already present)
   const newImport = `import ${varName}Texture from '~/assets/${slug}/${imageFilename}';
 import ${varName}TexturePlaceholder from '~/assets/${slug}/${imageFilename}';`;
 
-  // Find the last texture import and add after it
-  const lastImportMatch = homeContent.match(/import [a-zA-Z]+Texture(?:Placeholder)? from '~\/assets\/[^']+';/g);
-  if (lastImportMatch) {
-    const lastImport = lastImportMatch[lastImportMatch.length - 1];
-    homeContent = homeContent.replace(lastImport, `${lastImport}\n${newImport}`);
+  // Check if imports already exist
+  const importExists = homeContent.includes(`import ${varName}Texture from`);
+
+  if (!importExists) {
+    // Find the last texture import and add after it
+    const lastImportMatch = homeContent.match(/import [a-zA-Z]+Texture(?:Placeholder)? from '~\/assets\/[^']+';/g);
+    if (lastImportMatch) {
+      const lastImport = lastImportMatch[lastImportMatch.length - 1];
+      homeContent = homeContent.replace(lastImport, `${lastImport}\n${newImport}`);
+    }
   }
 
   // Count existing project refs and add new one
