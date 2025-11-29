@@ -167,10 +167,16 @@ Generate a JSON response with the following structure:
       "content": "2-3 sentences describing this aspect of the project",
       "type": "text" // or "columns" for side-by-side layout
     }
-  ] // 3-5 sections
+  ], // 3-5 sections
+  "homePage": {
+    "title": "Short catchy title for home page (max 50 chars)",
+    "description": "One sentence description for home page preview (max 120 chars)",
+    "modelType": "laptop" // or "phone" - choose "phone" if it's primarily a mobile app, otherwise "laptop"
+  }
 }
 
-Make the content professional and highlight the technical achievements and impact. Focus on what was built and the outcomes.`;
+Make the content professional and highlight the technical achievements and impact. Focus on what was built and the outcomes.
+For modelType: use "phone" only if this is primarily a mobile app (iOS/Android). For websites, web apps, dashboards, SaaS products, use "laptop".`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -436,6 +442,119 @@ function generateRouteFile(projectName, slug) {
 `;
 }
 
+// Update home.jsx to add new project at the top
+function updateHomePage(slug, content, hasImages) {
+  const homeJsxPath = path.join(rootDir, 'app', 'routes', 'home', 'home.jsx');
+  let homeContent = fs.readFileSync(homeJsxPath, 'utf-8');
+
+  const varName = toCamelCase(slug);
+  const homePage = content.homePage || {
+    title: content.title,
+    description: content.description,
+    modelType: 'laptop',
+  };
+
+  // Add import for the new project's texture
+  const newImport = `import ${varName}Texture from '~/assets/${slug}/image-0.png';
+import ${varName}TexturePlaceholder from '~/assets/${slug}/image-0.png';`;
+
+  // Find the last texture import and add after it
+  const lastImportMatch = homeContent.match(/import [a-zA-Z]+Texture(?:Placeholder)? from '~\/assets\/[^']+';/g);
+  if (lastImportMatch) {
+    const lastImport = lastImportMatch[lastImportMatch.length - 1];
+    homeContent = homeContent.replace(lastImport, `${lastImport}\n${newImport}`);
+  }
+
+  // Count existing project refs and add new one
+  const projectRefMatches = homeContent.match(/const project(One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten) = useRef\(\);/g) || [];
+  const refNames = ['One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+  const newRefName = refNames[projectRefMatches.length];
+  const lastRefName = refNames[projectRefMatches.length - 1];
+
+  // Add new ref after details ref
+  homeContent = homeContent.replace(
+    `const project${lastRefName} = useRef();`,
+    `const project${lastRefName} = useRef();\n  const project${newRefName} = useRef();`
+  );
+
+  // Update sections array to include new project
+  const sectionsRegex = /const sections = \[([^\]]+)\];/;
+  const sectionsMatch = homeContent.match(sectionsRegex);
+  if (sectionsMatch) {
+    const currentSections = sectionsMatch[1].trim();
+    // Insert new project ref before details
+    const updatedSections = currentSections.replace(
+      /, details/,
+      `, project${newRefName}, details`
+    );
+    homeContent = homeContent.replace(sectionsRegex, `const sections = [${updatedSections}];`);
+  }
+
+  // Find existing ProjectSummary components and shift their indices
+  // We need to increment all existing project indices by 1
+  for (let i = projectRefMatches.length; i >= 1; i--) {
+    const oldIndex = i;
+    const newIndex = i + 1;
+    const oldId = `id="project-${oldIndex}"`;
+    const newId = `id="project-${newIndex}"`;
+    homeContent = homeContent.replace(new RegExp(oldId, 'g'), newId);
+
+    const oldIndexProp = `index={${oldIndex}}`;
+    const newIndexProp = `index={${newIndex}}`;
+    homeContent = homeContent.replace(new RegExp(oldIndexProp, 'g'), newIndexProp);
+  }
+
+  // Also update ref assignments (projectOne -> projectTwo, etc.) but we need to be careful
+  // Actually, let's just add the new project and update the indices, keeping existing refs
+
+  // Determine alternate prop based on position (first project is not alternate)
+  const isAlternate = false; // New project is always first, so not alternate
+
+  // Generate phone or laptop texture config
+  let textureConfig;
+  if (homePage.modelType === 'phone') {
+    textureConfig = `{
+            srcSet: \`\${${varName}Texture} 375w, \${${varName}Texture} 750w\`,
+            placeholder: ${varName}TexturePlaceholder,
+          }`;
+  } else {
+    textureConfig = `{
+              srcSet: \`\${${varName}Texture} 800w, \${${varName}Texture} 1920w\`,
+              placeholder: ${varName}TexturePlaceholder,
+            }`;
+  }
+
+  // Create the new ProjectSummary component
+  const newProjectSummary = `<ProjectSummary
+        id="project-1"
+        sectionRef={project${newRefName}}
+        visible={visibleSections.includes(project${newRefName}.current)}
+        index={1}
+        title="${homePage.title.replace(/"/g, '\\"')}"
+        description="${homePage.description.replace(/"/g, '\\"')}"
+        buttonText="View project"
+        buttonLink="/projects/${slug}"
+        model={{
+          type: '${homePage.modelType}',
+          alt: '${homePage.title.replace(/'/g, "\\'")}',
+          textures: [
+            ${textureConfig},
+          ],
+        }}
+      />
+      `;
+
+  // Insert new ProjectSummary before the first existing one
+  homeContent = homeContent.replace(
+    /<ProjectSummary\s+id="project-2"/,
+    `${newProjectSummary}<ProjectSummary
+        id="project-2"`
+  );
+
+  fs.writeFileSync(homeJsxPath, homeContent);
+  return true;
+}
+
 // Main function
 async function main() {
   const args = parseArgs();
@@ -555,10 +674,20 @@ async function main() {
   console.log(`   ✅ Created: ${slug}.module.css`);
   console.log(`   ✅ Created: route.js\n`);
 
+  // Update home page
+  console.log('🏠 Adding project to home page...\n');
+  try {
+    updateHomePage(slug, content, downloadedImages.length > 0);
+    console.log('   ✅ Updated home.jsx\n');
+  } catch (error) {
+    console.log(`   ⚠️  Failed to update home page: ${error.message}`);
+    console.log('   You may need to manually add the project to home.jsx\n');
+  }
+
   console.log('🎉 Project created successfully!\n');
   console.log(`   View at: /projects/${slug}`);
+  console.log(`   Home page: Project added as first item`);
   console.log(`   Edit: app/routes/projects.${slug}/${slug}.jsx\n`);
-  console.log('   Note: You may need to adjust image imports and add placeholder images.\n');
 }
 
 main().catch((error) => {
