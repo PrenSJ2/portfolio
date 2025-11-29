@@ -7,6 +7,8 @@ import vvScan from '~/assets/VV-scan.png';
 import towfoodLarge from '~/assets/towfood-large.png';
 import towfoodPlaceholder from '~/assets/towfood-placeholder.png';
 import towfood from '~/assets/towfood.png';
+import ancientBotsTexture from '~/assets/ancient-bots/image-0.png';
+import ancientBotsTexturePlaceholder from '~/assets/ancient-bots/image-0.png';
 // import sprTextureLarge from '~/assets/spr-lesson-builder-dark-large.jpg';
 // import sprTexturePlaceholder from '~/assets/spr-lesson-builder-dark-placeholder.jpg';
 // import sprTexture from '~/assets/spr-lesson-builder-dark.jpg';
@@ -56,10 +58,11 @@ export const Home = () => {
   const projectOne = useRef();
   const projectTwo = useRef();
   const projectThree = useRef();
+  const projectFour = useRef();
   const details = useRef();
 
   useEffect(() => {
-    const sections = [intro, projectOne, projectTwo, projectThree, details];
+    const sections = [intro, projectOne, projectTwo, projectThree, projectFour, details];
 
     const sectionObserver = new IntersectionObserver(
       (entries, observer) => {
@@ -164,6 +167,27 @@ export const Home = () => {
             {
               srcSet: `${towfood} 800w, ${towfoodLarge} 1920w`,
               placeholder: towfoodPlaceholder,
+            },
+          ],
+        }}
+      />
+      <ProjectSummary
+        id="project-4"
+        alternate
+        sectionRef={projectFour}
+        visible={visibleSections.includes(projectFour.current)}
+        index={4}
+        title="Ancient Bots"
+        description="AI-powered social media content generator that creates stunning posts, thumbnails, and captions in seconds."
+        buttonText="View project"
+        buttonLink="/projects/ancient-bots"
+        model={{
+          type: 'laptop',
+          alt: 'Ancient Bots AI Content Generator',
+          textures: [
+            {
+              srcSet: `${ancientBotsTexture} 800w, ${ancientBotsTexture} 1920w`,
+              placeholder: ancientBotsTexturePlaceholder,
             },
           ],
         }}
