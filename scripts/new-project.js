@@ -1,0 +1,567 @@
+#!/usr/bin/env node
+
+/**
+ * New Project Generator Script
+ *
+ * Usage: npm run new-project -- --url=<website-url> --name=<project-name>
+ *
+ * This script:
+ * 1. Scrapes the provided URL for content and images
+ * 2. Uses OpenAI GPT-4 to generate project content
+ * 3. Downloads relevant images
+ * 4. Creates a new project route with all necessary files
+ *
+ * Requirements:
+ * - OPENAI_API_KEY environment variable must be set
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import https from 'https';
+import http from 'http';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
+
+// Parse command line arguments
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const parsed = {};
+
+  for (const arg of args) {
+    if (arg.startsWith('--')) {
+      const [key, value] = arg.slice(2).split('=');
+      parsed[key] = value || true;
+    }
+  }
+
+  return parsed;
+}
+
+// Fetch HTML content from URL
+async function fetchPage(url) {
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith('https') ? https : http;
+
+    const request = protocol.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        // Handle redirects
+        const redirectUrl = new URL(response.headers.location, url).href;
+        fetchPage(redirectUrl).then(resolve).catch(reject);
+        return;
+      }
+
+      let data = '';
+      response.on('data', (chunk) => (data += chunk));
+      response.on('end', () => resolve(data));
+    });
+
+    request.on('error', reject);
+    request.setTimeout(30000, () => {
+      request.destroy();
+      reject(new Error('Request timeout'));
+    });
+  });
+}
+
+// Extract text content and images from HTML
+function parseHTML(html, baseUrl) {
+  // Extract title
+  const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  const title = titleMatch ? titleMatch[1].trim() : '';
+
+  // Extract meta description
+  const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i);
+  const description = descMatch ? descMatch[1].trim() : '';
+
+  // Extract headings
+  const headings = [];
+  const headingRegex = /<h[1-6][^>]*>([^<]*(?:<[^>]+>[^<]*)*)<\/h[1-6]>/gi;
+  let match;
+  while ((match = headingRegex.exec(html)) !== null) {
+    const text = match[1].replace(/<[^>]+>/g, '').trim();
+    if (text) headings.push(text);
+  }
+
+  // Extract paragraphs
+  const paragraphs = [];
+  const pRegex = /<p[^>]*>([^<]*(?:<[^>]+>[^<]*)*)<\/p>/gi;
+  while ((match = pRegex.exec(html)) !== null) {
+    const text = match[1].replace(/<[^>]+>/g, '').trim();
+    if (text && text.length > 20) paragraphs.push(text);
+  }
+
+  // Extract images
+  const images = [];
+  const imgRegex = /<img[^>]*src=["']([^"']+)["'][^>]*>/gi;
+  while ((match = imgRegex.exec(html)) !== null) {
+    let imgUrl = match[1];
+    // Convert relative URLs to absolute
+    if (!imgUrl.startsWith('http')) {
+      imgUrl = new URL(imgUrl, baseUrl).href;
+    }
+    // Filter out small images, icons, and tracking pixels
+    if (!imgUrl.includes('icon') && !imgUrl.includes('logo') && !imgUrl.includes('pixel')) {
+      images.push(imgUrl);
+    }
+  }
+
+  // Also check for og:image
+  const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']*)["']/i);
+  if (ogImageMatch) {
+    let ogImage = ogImageMatch[1];
+    if (!ogImage.startsWith('http')) {
+      ogImage = new URL(ogImage, baseUrl).href;
+    }
+    images.unshift(ogImage); // Add to beginning as it's usually the main image
+  }
+
+  // Extract body text (simplified)
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const bodyText = bodyMatch
+    ? bodyMatch[1]
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 5000)
+    : '';
+
+  return {
+    title,
+    description,
+    headings: headings.slice(0, 10),
+    paragraphs: paragraphs.slice(0, 20),
+    images: [...new Set(images)].slice(0, 10), // Dedupe and limit
+    bodyText,
+  };
+}
+
+// Call OpenAI API to generate project content
+async function generateContent(scrapedData, projectName, url) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY environment variable is not set');
+  }
+
+  const prompt = `You are helping create a portfolio project page. Based on the following scraped website data, generate content for a project showcase.
+
+Website URL: ${url}
+Title: ${scrapedData.title}
+Description: ${scrapedData.description}
+Headings: ${scrapedData.headings.join(', ')}
+Sample paragraphs: ${scrapedData.paragraphs.slice(0, 5).join('\n')}
+Body text excerpt: ${scrapedData.bodyText.slice(0, 2000)}
+
+Generate a JSON response with the following structure:
+{
+  "title": "A compelling project title (max 80 chars)",
+  "description": "A 1-2 sentence description of the project (max 200 chars)",
+  "roles": ["Role 1", "Role 2", "Role 3", "Role 4"], // 3-6 roles/technologies used
+  "sections": [
+    {
+      "heading": "Section heading",
+      "content": "2-3 sentences describing this aspect of the project",
+      "type": "text" // or "columns" for side-by-side layout
+    }
+  ] // 3-5 sections
+}
+
+Make the content professional and highlight the technical achievements and impact. Focus on what was built and the outcomes.`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a technical writer helping create portfolio content. Always respond with valid JSON only, no markdown.',
+        },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 1500,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0].message.content;
+
+  try {
+    return JSON.parse(content);
+  } catch {
+    // Try to extract JSON from the response
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    throw new Error('Failed to parse OpenAI response as JSON');
+  }
+}
+
+// Download an image
+async function downloadImage(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const protocol = url.startsWith('https') ? https : http;
+
+    const request = protocol.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, (response) => {
+      if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+        const redirectUrl = new URL(response.headers.location, url).href;
+        downloadImage(redirectUrl, destPath).then(resolve).catch(reject);
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        reject(new Error(`Failed to download image: ${response.statusCode}`));
+        return;
+      }
+
+      const fileStream = fs.createWriteStream(destPath);
+      response.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close();
+        resolve(destPath);
+      });
+      fileStream.on('error', reject);
+    });
+
+    request.on('error', reject);
+    request.setTimeout(30000, () => {
+      request.destroy();
+      reject(new Error('Download timeout'));
+    });
+  });
+}
+
+// Get file extension from URL or content type
+function getImageExtension(url) {
+  const urlPath = new URL(url).pathname;
+  const ext = path.extname(urlPath).toLowerCase();
+  if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].includes(ext)) {
+    return ext;
+  }
+  return '.jpg'; // Default
+}
+
+// Create slug from project name
+function createSlug(name) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Convert slug to camelCase for JS variable names
+function toCamelCase(slug) {
+  return slug.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+}
+
+// Generate the JSX route file
+function generateJSXFile(projectName, slug, content, imageImports) {
+  const sections = content.sections || [];
+  const varName = toCamelCase(slug);
+
+  const sectionComponents = sections
+    .map((section, index) => {
+      const isLight = index % 2 === 1;
+      const lightProp = isLight ? ' light' : '';
+
+      return `
+        <ProjectSection${lightProp}>
+          <ProjectSectionContent>
+            <ProjectTextRow>
+              <ProjectSectionHeading>${section.heading}</ProjectSectionHeading>
+              <ProjectSectionText>
+                ${section.content}
+              </ProjectSectionText>
+            </ProjectTextRow>
+          </ProjectSectionContent>
+        </ProjectSection>`;
+    })
+    .join('\n');
+
+  const imageImportStatements = imageImports
+    .map(
+      (img, i) =>
+        `import ${varName}Image${i} from '~/assets/${slug}/${img.filename}';\nimport ${varName}Image${i}Placeholder from '~/assets/${slug}/${img.filename}';`
+    )
+    .join('\n');
+
+  const heroImageSection = imageImports.length > 0 ? `
+        <ProjectSection padding="top">
+          <ProjectSectionContent>
+            <ProjectImage
+              srcSet={\`\${${varName}Image0} 800w, \${${varName}Image0} 1920w\`}
+              width={800}
+              height={500}
+              placeholder={${varName}Image0Placeholder}
+              alt="${content.title.replace(/"/g, '\\"')}"
+              sizes={\`(max-width: \${media.mobile}px) 100vw, (max-width: \${media.tablet}px) 90vw, 80vw\`}
+            />
+          </ProjectSectionContent>
+        </ProjectSection>
+` : '';
+
+  const backgroundVar = imageImports.length > 0 ? `${varName}Image0` : 'placeholderBg';
+  const backgroundPlaceholderVar = imageImports.length > 0 ? `${varName}Image0Placeholder` : 'placeholderBg';
+
+  const lines = [
+    `import { Footer } from '~/components/footer';`,
+    `import { Image } from '~/components/image';`,
+    `import {`,
+    `  ProjectBackground,`,
+    `  ProjectContainer,`,
+    `  ProjectHeader,`,
+    `  ProjectImage,`,
+    `  ProjectSection,`,
+    `  ProjectSectionContent,`,
+    `  ProjectSectionHeading,`,
+    `  ProjectSectionText,`,
+    `  ProjectTextRow,`,
+    `} from '~/layouts/project';`,
+    `import { Fragment } from 'react';`,
+    `import { media } from '~/utils/style';`,
+    `import { baseMeta } from '~/utils/meta';`,
+    `import styles from './${slug}.module.css';`,
+  ];
+
+  if (imageImportStatements) {
+    lines.push(imageImportStatements);
+  }
+
+  lines.push('');
+  lines.push(`const title = '${content.title.replace(/'/g, "\\'")}';`);
+  lines.push(`const description = '${content.description.replace(/'/g, "\\'")}';`);
+  lines.push(`const roles = [${content.roles.map((r) => `'${r.replace(/'/g, "\\'")}'`).join(', ')}];`);
+  lines.push('');
+  lines.push(`export const meta = () => {`);
+  lines.push(`  return baseMeta({ title, description, prefix: 'Projects' });`);
+  lines.push(`};`);
+  lines.push('');
+  lines.push(`export const ${projectName} = () => {`);
+  lines.push(`  return (`);
+  lines.push(`    <Fragment>`);
+  lines.push(`      <ProjectContainer className={styles.${varName}}>`);
+  lines.push(`        <ProjectBackground`);
+  lines.push(`          src={${backgroundVar}}`);
+  lines.push('          srcSet={`${' + backgroundVar + '} 1280w, ${' + backgroundVar + '} 2560w`}');
+  lines.push(`          width={1280}`);
+  lines.push(`          height={800}`);
+  lines.push(`          placeholder={${backgroundPlaceholderVar}}`);
+  lines.push(`          opacity={0.8}`);
+  lines.push(`        />`);
+  lines.push(`        <ProjectHeader`);
+  lines.push(`          title={title}`);
+  lines.push(`          description={description}`);
+  lines.push(`          roles={roles}`);
+  lines.push(`        />`);
+
+  if (heroImageSection) {
+    lines.push(heroImageSection);
+  }
+
+  lines.push(sectionComponents);
+  lines.push(`      </ProjectContainer>`);
+  lines.push(`      <Footer />`);
+  lines.push(`    </Fragment>`);
+  lines.push(`  );`);
+  lines.push(`};`);
+  lines.push('');
+
+  return lines.join('\n');
+}
+
+// Generate CSS module file
+function generateCSSFile(slug) {
+  const varName = toCamelCase(slug);
+  return `.${varName} {
+  /* Project-specific styles */
+}
+
+.columns {
+  margin: 20px 0 60px;
+}
+
+.sidebarImages {
+  display: grid;
+  grid-template-columns: repeat(6, [col] 1fr);
+  align-items: center;
+
+  @media (--mediaTablet) {
+    padding: 0 80px;
+    margin-top: 60px;
+  }
+
+  @media (--mediaMobile) {
+    padding: 0 20px;
+    margin-top: 40px;
+  }
+}
+
+.sidebarImage {
+  &:first-child {
+    grid-column: col 1 / span 4;
+    grid-row: 1;
+    position: relative;
+    top: 5%;
+    opacity: 0.4;
+  }
+
+  &:last-child {
+    grid-column: col 3 / span 4;
+    grid-row: 1;
+    position: relative;
+    top: -5%;
+  }
+}
+`;
+}
+
+// Generate route.js file
+function generateRouteFile(projectName, slug) {
+  return `export { ${projectName} as default, meta } from './${slug}';
+`;
+}
+
+// Main function
+async function main() {
+  const args = parseArgs();
+
+  if (!args.url) {
+    console.error('Usage: npm run new-project -- --url=<website-url> [--name=<project-name>]');
+    console.error('');
+    console.error('Options:');
+    console.error('  --url    The URL of the website to scrape (required)');
+    console.error('  --name   The project name (optional, will be derived from URL if not provided)');
+    console.error('');
+    console.error('Environment:');
+    console.error('  OPENAI_API_KEY must be set');
+    process.exit(1);
+  }
+
+  const url = args.url;
+
+  console.log(`\n🔍 Scraping ${url}...\n`);
+
+  // Fetch and parse the page
+  let html;
+  try {
+    html = await fetchPage(url);
+  } catch (error) {
+    console.error(`❌ Failed to fetch page: ${error.message}`);
+    process.exit(1);
+  }
+
+  const scrapedData = parseHTML(html, url);
+  console.log(`✅ Found: "${scrapedData.title}"`);
+  console.log(`   ${scrapedData.images.length} images, ${scrapedData.paragraphs.length} paragraphs\n`);
+
+  // Derive project name
+  let projectName = args.name;
+  if (!projectName) {
+    // Try to create from title or URL
+    projectName = scrapedData.title
+      ? scrapedData.title.split(/[|\-–—]/)[0].trim()
+      : new URL(url).hostname.replace(/^www\./, '').split('.')[0];
+  }
+
+  // Convert to PascalCase for component name
+  const componentName = projectName
+    .split(/[\s-_]+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join('');
+
+  const slug = createSlug(projectName);
+
+  console.log(`📝 Project name: ${componentName}`);
+  console.log(`   Slug: ${slug}\n`);
+
+  // Generate content with OpenAI
+  console.log('🤖 Generating content with OpenAI GPT-4...\n');
+  let content;
+  try {
+    content = await generateContent(scrapedData, projectName, url);
+  } catch (error) {
+    console.error(`❌ Failed to generate content: ${error.message}`);
+    process.exit(1);
+  }
+
+  console.log(`✅ Generated: "${content.title}"`);
+  console.log(`   Roles: ${content.roles.join(', ')}`);
+  console.log(`   Sections: ${content.sections.length}\n`);
+
+  // Create directories
+  const projectDir = path.join(rootDir, 'app', 'routes', `projects.${slug}`);
+  const assetsDir = path.join(rootDir, 'app', 'assets', slug);
+
+  if (fs.existsSync(projectDir)) {
+    console.error(`❌ Project directory already exists: ${projectDir}`);
+    process.exit(1);
+  }
+
+  fs.mkdirSync(projectDir, { recursive: true });
+  fs.mkdirSync(assetsDir, { recursive: true });
+
+  console.log(`📁 Created directories:`);
+  console.log(`   ${projectDir}`);
+  console.log(`   ${assetsDir}\n`);
+
+  // Download images
+  console.log('📥 Downloading images...\n');
+  const downloadedImages = [];
+
+  for (let i = 0; i < Math.min(scrapedData.images.length, 5); i++) {
+    const imgUrl = scrapedData.images[i];
+    const ext = getImageExtension(imgUrl);
+    const filename = `image-${i}${ext}`;
+    const destPath = path.join(assetsDir, filename);
+
+    try {
+      await downloadImage(imgUrl, destPath);
+      downloadedImages.push({ url: imgUrl, filename, path: destPath });
+      console.log(`   ✅ Downloaded: ${filename}`);
+    } catch (error) {
+      console.log(`   ⚠️  Failed to download ${imgUrl}: ${error.message}`);
+    }
+  }
+
+  console.log('');
+
+  // Generate files
+  console.log('📄 Generating project files...\n');
+
+  const jsxContent = generateJSXFile(componentName, slug, content, downloadedImages);
+  const cssContent = generateCSSFile(slug);
+  const routeContent = generateRouteFile(componentName, slug);
+
+  fs.writeFileSync(path.join(projectDir, `${slug}.jsx`), jsxContent);
+  fs.writeFileSync(path.join(projectDir, `${slug}.module.css`), cssContent);
+  fs.writeFileSync(path.join(projectDir, 'route.js'), routeContent);
+
+  console.log(`   ✅ Created: ${slug}.jsx`);
+  console.log(`   ✅ Created: ${slug}.module.css`);
+  console.log(`   ✅ Created: route.js\n`);
+
+  console.log('🎉 Project created successfully!\n');
+  console.log(`   View at: /projects/${slug}`);
+  console.log(`   Edit: app/routes/projects.${slug}/${slug}.jsx\n`);
+  console.log('   Note: You may need to adjust image imports and add placeholder images.\n');
+}
+
+main().catch((error) => {
+  console.error('Error:', error);
+  process.exit(1);
+});
