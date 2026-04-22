@@ -21,8 +21,8 @@ const ProfileText = ({ visible, titleId }) => (
       <DecoderText text="Hi there" start={visible} delay={500} />
     </Heading>
     <Text className={styles.description} data-visible={visible} size="l" as="p">
-      I’m Seb, currently I live in London, UK working as a Senior Full Stack AI Software Engineer at{' '}
-      <Link href="https://www.voxlydigital.com/">Voxly Digital</Link>.  My daily grind is
+      I’m Seb, currently I live in London, UK working as a Sr Conversational Engineer at{' '}
+      <Link href="https://66degrees.com/">66Degrees</Link>.  My daily grind is
       an exciting mix of developing features, troubleshooting errors, managing microservices,
       and streamlining CI/CD and DevOps processes. My knack for design also empowers me to
       swiftly bring attractive and functional ideas to life.

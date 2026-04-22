@@ -15,6 +15,12 @@ import teamworksTexturePlaceholder from '~/assets/teamworks/Website-home-placeho
 import teamworksTexture from '~/assets/spr-lesson-builder-dark.jpg';
 import ancientBotsTexture from '~/assets/ancient-bots/screenshot-hero.png';
 import ancientBotsTexturePlaceholder from '~/assets/ancient-bots/screenshot-hero.png';
+import mormonizeTexture from '~/assets/mormonize/screenshot-hero.png';
+import mormonizeTexturePlaceholder from '~/assets/mormonize/screenshot-hero.png';
+import fitcheckTexture from '~/assets/fitcheck/screenshot-hero.png';
+import fitcheckTexturePlaceholder from '~/assets/fitcheck/screenshot-hero.png';
+import thothTexture from '~/assets/thoth/thoth-logo.png';
+import thothTexturePlaceholder from '~/assets/thoth/thoth-logo.png';
 import { Footer } from '~/components/footer';
 import { baseMeta } from '~/utils/meta';
 import { Intro } from './intro';
@@ -59,10 +65,23 @@ export const Home = () => {
   const projectTwo = useRef();
   const projectThree = useRef();
   const projectFour = useRef();
+  const projectFive = useRef();
+  const projectSix = useRef();
+  const projectSeven = useRef();
   const details = useRef();
 
   useEffect(() => {
-    const sections = [intro, projectOne, projectTwo, projectThree, projectFour, details];
+    const sections = [
+      intro,
+      projectOne,
+      projectTwo,
+      projectThree,
+      projectFour,
+      projectFive,
+      projectSix,
+      projectSeven,
+      details,
+    ];
 
     const sectionObserver = new IntersectionObserver(
       (entries, observer) => {
@@ -106,9 +125,71 @@ export const Home = () => {
       />
       <ProjectSummary
         id="project-1"
+        sectionRef={projectOne}
+        visible={visibleSections.includes(projectOne.current)}
+        index={1}
+        title="Mormonize: AI Scripture Study Companion"
+        description="A native iOS app with on-device AI, semantic search, and guided journeys — fully offline-capable."
+        buttonText="View project"
+        buttonLink="/projects/mormonize"
+        model={{
+          type: 'phone',
+          alt: 'Mormonize iOS app home screen',
+          textures: [
+            {
+              srcSet: `${mormonizeTexture} 375w, ${mormonizeTexture} 750w`,
+              placeholder: mormonizeTexturePlaceholder,
+            },
+          ],
+        }}
+      />
+      <ProjectSummary
+        id="project-2"
+        alternate
+        sectionRef={projectTwo}
+        visible={visibleSections.includes(projectTwo.current)}
+        index={2}
+        title="FitCheck: Privacy-First Size Recommendations"
+        description="Open-source Chrome extension that recommends clothing sizes across brands — all data stays on device."
+        buttonText="View project"
+        buttonLink="/projects/fitcheck"
+        model={{
+          type: 'laptop',
+          alt: 'FitCheck Chrome extension landing page',
+          textures: [
+            {
+              srcSet: `${fitcheckTexture} 800w, ${fitcheckTexture} 1920w`,
+              placeholder: fitcheckTexturePlaceholder,
+            },
+          ],
+        }}
+      />
+      <ProjectSummary
+        id="project-3"
+        sectionRef={projectThree}
+        visible={visibleSections.includes(projectThree.current)}
+        index={3}
+        title="Thoth: AI Scribe for GitHub"
+        description="A Chrome extension that turns selected text or screenshots into well-structured, template-aware GitHub issues."
+        buttonText="View project"
+        buttonLink="/projects/thoth"
+        model={{
+          type: 'laptop',
+          alt: 'Thoth logo',
+          textures: [
+            {
+              srcSet: `${thothTexture} 800w, ${thothTexture} 1920w`,
+              placeholder: thothTexturePlaceholder,
+            },
+          ],
+        }}
+      />
+      <ProjectSummary
+        id="project-4"
+        alternate
         sectionRef={projectFour}
         visible={visibleSections.includes(projectFour.current)}
-        index={1}
+        index={4}
         title="Ancient Bots: AI for Social Media"
         description="Automate your social media presence with AI-generated, viral content."
         buttonText="View project"
@@ -125,10 +206,10 @@ export const Home = () => {
         }}
       />
       <ProjectSummary
-        id="project-2"
-        sectionRef={projectOne}
-        visible={visibleSections.includes(projectOne.current)}
-        index={2}
+        id="project-5"
+        sectionRef={projectFive}
+        visible={visibleSections.includes(projectFive.current)}
+        index={5}
         title="Office Rental Platform and App"
         description="Designed and developed a platform for Teamworks Execuitve Suites to manage office rentals and bookings."
         buttonText="View project"
@@ -145,11 +226,11 @@ export const Home = () => {
         }}
       />
       <ProjectSummary
-        id="project-3"
+        id="project-6"
         alternate
-        sectionRef={projectTwo}
-        visible={visibleSections.includes(projectTwo.current)}
-        index={3}
+        sectionRef={projectSix}
+        visible={visibleSections.includes(projectSix.current)}
+        index={6}
         title="Voulez Vous App"
         description="Developed a spirit recognition and cocktail recipe app."
         buttonText="View App"
@@ -171,10 +252,10 @@ export const Home = () => {
         }}
       />
       <ProjectSummary
-        id="project-4"
-        sectionRef={projectThree}
-        visible={visibleSections.includes(projectThree.current)}
-        index={4}
+        id="project-7"
+        sectionRef={projectSeven}
+        visible={visibleSections.includes(projectSeven.current)}
+        index={7}
         title="Larder Inventory Management System"
         description="Designed and developed a system for Tow Food Larders to manage inventory and orders."
         buttonText="View project"
