@@ -31,7 +31,11 @@ npm run dev:storybook
 
 ## Deployment
 
-I've set up the site using Cloudflare for hosting. Deploy the site to Cloudflare Pages:
+The site is hosted on AWS — S3 + CloudFront at [seb.onlineo.live](https://seb.onlineo.live), provisioned by SST via `sst.config.ts`.
+
+Pushing to `master` deploys automatically through [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml), which authenticates to AWS using GitHub OIDC (role `portfolio-github-deploy`) — no long-lived AWS credentials are stored in GitHub.
+
+To deploy manually:
 
 ```bash
 npm run deploy
@@ -54,5 +58,5 @@ I do not give permission to present any of my projects as your own (this is bein
 <details>
   <summary>How do I get the contact form to work?</summary>
   
-  To get the contact form working create an AWS account and set up SES (Simple Email service). Then plug in your details into `.dev.vars.example` and rename it to `.dev.vars`. You'll also need to add these as enviroment variables in the Cloudflare dashboard for it to work in production. Or if you don't mind sending through gmail use [nodemailer](https://nodemailer.com/) instead.
+  To get the contact form working create an AWS account and set up SES (Simple Email service), then configure the relevant credentials as environment variables for your deployment. Or if you don't mind sending through gmail use [nodemailer](https://nodemailer.com/) instead.
 </details>
