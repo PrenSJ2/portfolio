@@ -8,6 +8,7 @@
   "type": "module",
   "scripts": {
     "build": "react-router build && node ./scripts/flatten-404.mjs",
+    "verify": "node ./scripts/verify-build.mjs",
     "dev": "node ./scripts/dev.cjs && react-router dev",
     "start": "wrangler pages dev ./build/client",
     "postinstall": "node ./scripts/draco.cjs",
