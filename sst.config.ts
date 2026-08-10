@@ -12,7 +12,15 @@ export default $config({
   async run() {
     new sst.aws.StaticSite('Portfolio', {
       build: {
-        command: 'npm run build',
+        // Intentionally a no-op — NOT 'npm run build'. The CI workflow (and
+        // `npm run deploy` locally) already runs `npm run build` followed by
+        // `npm run verify` *before* this SST deploy starts, and AWS
+        // credentials are only assumed after both pass. If this ran the real
+        // build, SST would silently rebuild from source here, discarding the
+        // verified `build/client` artifact and shipping an unverified one —
+        // gating `verify` against bits that never ship. Do not "fix" this
+        // back to `npm run build`.
+        command: 'echo "using pre-built build/client"',
         output: 'build/client',
       },
       domain: {

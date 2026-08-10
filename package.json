@@ -11,7 +11,7 @@
     "verify": "node ./scripts/verify-build.mjs",
     "dev": "node ./scripts/dev.cjs && react-router dev",
     "postinstall": "node ./scripts/draco.cjs",
-    "deploy": "sst deploy --stage production",
+    "deploy": "npm run build && npm run verify && sst deploy --stage production",
     "dev:storybook": "storybook dev -p 6006",
     "build:storybook": "storybook build",
     "new-project": "node ./scripts/new-project.js"
