@@ -41,6 +41,8 @@ To deploy manually:
 npm run deploy
 ```
 
+`sst` is pinned to an exact version in `package.json` deliberately — it's coupled to internal 404-handling behaviour documented in `sst.config.ts`. If Dependabot (or anyone) bumps it, re-verify the 404 behaviour described there before merging.
+
 ## Permissions
 
 I'm cool with anyone using the code or parts of the code for their own site, it is open source so people can learn from it and adapt it. However, I would encourage you to modify the theme and components it to make it your own. If you are using the site's design largely unmodified, I'd appreciate being credited as the designer of the website.

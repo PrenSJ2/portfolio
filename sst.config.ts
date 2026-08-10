@@ -102,6 +102,15 @@ if (event.request.uri === '/404.html' && event.response.statusCode === 200) {
 }`,
         },
       },
+
+      // SST defaults to `wait: false`, which returns before the CloudFront
+      // invalidation completes. The post-deploy smoke test in
+      // .github/workflows/deploy.yml curls the live site immediately after
+      // `sst deploy`, so without `wait: true` it can read stale, pre-deploy
+      // CDN content and false-pass.
+      invalidation: {
+        wait: true,
+      },
     });
   },
 });

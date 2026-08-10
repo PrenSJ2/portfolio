@@ -36,3 +36,52 @@ jobs:
           aws-region: us-east-1
 
       - run: npx sst deploy --stage production
+
+      # Smoke-test the mechanism documented in sst.config.ts: unmatched paths
+      # must return a real 404 (not a soft 200), and real routes must still
+      # resolve. `invalidation: { wait: true }` on the StaticSite ensures the
+      # CDN is already serving the new content by the time this runs.
+      - name: Smoke test 404 handling and live routes
+        run: |
+          set -u
+          site="https://seb.onlineo.live"
+          failures=0
+
+          check_404() {
+            path="$1"
+            body=$(curl -s -o /tmp/body.html -w '%{http_code}' "${site}${path}")
+            status="$body"
+            if [ "$status" != "404" ]; then
+              echo "FAIL: ${path} returned status ${status}, expected 404"
+              failures=$((failures + 1))
+            elif ! grep -q 'Error: redacted' /tmp/body.html; then
+              echo "FAIL: ${path} returned 404 but body did not contain 'Error: redacted'"
+              failures=$((failures + 1))
+            else
+              echo "OK: ${path} -> 404 with styled error page"
+            fi
+          }
+
+          check_200() {
+            path="$1"
+            status=$(curl -s -o /dev/null -w '%{http_code}' "${site}${path}")
+            if [ "$status" != "200" ]; then
+              echo "FAIL: ${path} returned status ${status}, expected 200"
+              failures=$((failures + 1))
+            else
+              echo "OK: ${path} -> 200"
+            fi
+          }
+
+          check_404 "/nope"
+          check_404 "/projects/does-not-exist"
+          check_404 "/assets/nope.js"
+          check_404 "/404.html"
+          check_200 "/"
+          check_200 "/projects/thoth"
+
+          if [ "$failures" -ne 0 ]; then
+            echo "Smoke test failed with ${failures} failure(s)."
+            exit 1
+          fi
+          echo "Smoke test passed."
