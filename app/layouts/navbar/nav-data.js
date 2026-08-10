@@ -18,7 +18,7 @@ export const navLinks = [
 export const socialLinks = [
   {
     label: 'Resume',
-    url: `https://cv.onlineolive.xyz`,
+    url: 'https://rxresu.me/prensj2/seb-resume-2026',
     icon: 'resume',
   },
   {
