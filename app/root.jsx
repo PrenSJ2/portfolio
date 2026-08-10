@@ -70,8 +70,12 @@ export default function App() {
   const { state } = useNavigation();
 
   useEffect(() => {
-    const stored = localStorage.getItem('theme');
-    if (stored === 'light' || stored === 'dark') setTheme(stored);
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'light' || stored === 'dark') setTheme(stored);
+    } catch (e) {
+      // Storage blocked/unavailable — keep the default 'dark' theme
+    }
   }, []);
 
   function toggleTheme(newTheme) {
