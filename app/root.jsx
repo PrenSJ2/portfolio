@@ -7,8 +7,7 @@ import {
   useLoaderData,
   useNavigation,
   useRouteError,
-} from '@remix-run/react';
-import { json } from '@remix-run/cloudflare';
+} from 'react-router';
 import { ThemeProvider, themeStyles } from '~/components/theme-provider';
 import GothamBook from '~/assets/fonts/gotham-book.woff2';
 import GothamMedium from '~/assets/fonts/gotham-medium.woff2';
@@ -62,7 +61,7 @@ export const loader = async ({ request }) => {
   const pathnameSliced = pathname.endsWith('/') ? pathname.slice(0, -1) : url;
   const canonicalUrl = `${config.url}${pathnameSliced}`;
 
-  return json({ canonicalUrl });
+  return { canonicalUrl };
 };
 
 export default function App() {

@@ -1,6 +1,7 @@
 node_modules
 
 /.cache
+/.react-router
 /build
 .env
 
@@ -9,3 +10,5 @@ node_modules
 
 public/draco
 storybook-static
+
+.superpowers/

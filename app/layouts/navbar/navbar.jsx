@@ -4,7 +4,7 @@ import { useTheme } from '~/components/theme-provider';
 import { tokens } from '~/components/theme-provider/theme';
 import { Transition } from '~/components/transition';
 import { useScrollToHash, useWindowSize } from '~/hooks';
-import { Link as RouterLink, useLocation } from '@remix-run/react';
+import { Link as RouterLink, useLocation } from 'react-router';
 import { useEffect, useRef, useState } from 'react';
 import { cssProps, media, msToNum, numToMs } from '~/utils/style';
 import { NavToggle } from './nav-toggle';
@@ -142,7 +142,7 @@ export const Navbar = () => {
   return (
     <header className={styles.navbar} ref={headerRef}>
       <RouterLink
-        unstable_viewTransition
+        viewTransition
         prefetch="intent"
         to={location.pathname === '/' ? '/#intro' : '/'}
         data-navbar-item
@@ -157,7 +157,7 @@ export const Navbar = () => {
         <div className={styles.navList}>
           {navLinks.map(({ label, pathname }) => (
             <RouterLink
-              unstable_viewTransition
+              viewTransition
               prefetch="intent"
               to={pathname}
               key={label}
@@ -177,7 +177,7 @@ export const Navbar = () => {
           <nav className={styles.mobileNav} data-visible={visible} ref={nodeRef}>
             {navLinks.map(({ label, pathname }, index) => (
               <RouterLink
-                unstable_viewTransition
+                viewTransition
                 prefetch="intent"
                 to={pathname}
                 key={label}
