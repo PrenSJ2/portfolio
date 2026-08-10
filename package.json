@@ -57,6 +57,7 @@
     "puppeteer": "^24.31.0",
     "remark-frontmatter": "^5.0.0",
     "remark-mdx-frontmatter": "^4.0.0",
+    "sst": "^3.19.3",
     "storybook": "^7.6.17",
     "vite": "^5.1.0",
     "vite-jsconfig-paths": "^2.0.1"

@@ -8,6 +8,9 @@ node_modules
 .wrangler
 .dev.vars
 
+.sst
+sst-env.d.ts
+
 public/draco
 storybook-static
 
