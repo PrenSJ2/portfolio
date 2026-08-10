@@ -11,7 +11,7 @@ my portfolio, based off of [Hamish Williams' portfolio](https://github.com/Hamis
 
 ## Install & run
 
-Make sure you have nodejs `19.9.0` or higher and npm `9.6.3` or higher installed. Install dependencies with:
+Make sure you have nodejs `20` or higher and npm `9.6.3` or higher installed. Install dependencies with:
 
 ```bash
 npm install
