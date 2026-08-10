@@ -5,6 +5,9 @@ node_modules
 /build
 .env
 
+# Dead Next.js-era build output — the project no longer uses Next.js
+.next
+
 .sst
 sst-env.d.ts
 
