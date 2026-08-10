@@ -1,23 +1,12 @@
 import { readFile } from 'node:fs/promises';
+import reactRouterConfig from '../react-router.config.js';
 
 const dir = 'build/client';
 
-const routes = [
-  '/',
-  '/uses',
-  '/articles',
-  '/articles/django-elastic-beanstalk',
-  '/articles/instagram-platform-api',
-  '/projects/ancient-bots',
-  '/projects/fitcheck',
-  '/projects/mormonize',
-  '/projects/slice',
-  '/projects/smart-sparrow',
-  '/projects/teamworks',
-  '/projects/thoth',
-  '/projects/volkihar-knight',
-  '/projects/voulez-vous',
-];
+// The prerender list is the source of truth (react-router.config.js). `/404`
+// is handled separately below since it maps to `404.html`, not
+// `404/index.html`.
+const routes = reactRouterConfig.prerender.filter(route => route !== '/404');
 
 const failures = [];
 
