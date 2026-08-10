@@ -26,7 +26,7 @@ _______________________________________________________________________________
 TECHNOLOGY | テクノロジー
 
 React
-Remix
+React Router
 Three.js
 Framer Motion
 

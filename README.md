@@ -3,7 +3,7 @@
 </p>
 <h1 align="center">Personal portfolio</h1>
 
-[![Site preview](/public/site-preview.png)](https://seb.onlineolive.xyz)
+[![Site preview](/public/site-preview.png)](https://seb.onlineo.live)
 
 
 my portfolio, based off of [Hamish Williams' portfolio](https://github.com/HamishMW/portfolio)
@@ -53,10 +53,4 @@ I do not give permission to present any of my projects as your own (this is bein
   <summary>How do I change the color on the <code>DisplacementSphere</code> (blobby rotating thing in the background).</summary>
   
   You'll need to edit the fragment shader. [Check out this issue for more details](https://github.com/HamishMW/portfolio/issues/19#issuecomment-870996615).
-</details>
-
-<details>
-  <summary>How do I get the contact form to work?</summary>
-  
-  To get the contact form working create an AWS account and set up SES (Simple Email service), then configure the relevant credentials as environment variables for your deployment. Or if you don't mind sending through gmail use [nodemailer](https://nodemailer.com/) instead.
 </details>

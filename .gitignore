@@ -5,9 +5,6 @@ node_modules
 /build
 .env
 
-.wrangler
-.dev.vars
-
 .sst
 sst-env.d.ts
 
