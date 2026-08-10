@@ -4,16 +4,15 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
-  useFetcher,
   useLoaderData,
   useNavigation,
   useRouteError,
 } from '@remix-run/react';
-import { createCookieSessionStorage, json } from '@remix-run/cloudflare';
+import { json } from '@remix-run/cloudflare';
 import { ThemeProvider, themeStyles } from '~/components/theme-provider';
 import GothamBook from '~/assets/fonts/gotham-book.woff2';
 import GothamMedium from '~/assets/fonts/gotham-medium.woff2';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Error } from '~/layouts/error';
 import { VisuallyHidden } from '~/components/visually-hidden';
 import { Navbar } from '~/layouts/navbar';
@@ -22,6 +21,17 @@ import config from '~/config.json';
 import styles from './root.module.css';
 import './reset.module.css';
 import './global.module.css';
+
+export const themeScript = `
+(function () {
+  try {
+    var stored = localStorage.getItem('theme');
+    document.body.dataset.theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+  } catch (e) {
+    document.body.dataset.theme = 'dark';
+  }
+})();
+`;
 
 export const links = () => [
   {
@@ -46,59 +56,34 @@ export const links = () => [
   { rel: 'author', href: '/humans.txt', type: 'text/plain' },
 ];
 
-export const loader = async ({ request, context }) => {
+export const loader = async ({ request }) => {
   const { url } = request;
   const { pathname } = new URL(url);
   const pathnameSliced = pathname.endsWith('/') ? pathname.slice(0, -1) : url;
   const canonicalUrl = `${config.url}${pathnameSliced}`;
 
-  const { getSession, commitSession, destroySession } = createCookieSessionStorage({
-    cookie: {
-      name: '__session',
-      httpOnly: true,
-      maxAge: 604_800,
-      path: '/',
-      sameSite: 'lax',
-      secrets: [context.cloudflare.env.SESSION_SECRET || 'default-secret'],
-      secure: true,
-    },
-  });
-
-  let session;
-  let theme = 'dark';
-
-  try {
-    session = await getSession(request.headers.get('Cookie'));
-    theme = session.get('theme') || 'dark';
-  } catch (error) {
-    // Cookie is corrupted, create a fresh session
-    session = await getSession();
-  }
-
-  return json(
-    { canonicalUrl, theme },
-    {
-      headers: {
-        'Set-Cookie': await commitSession(session),
-      },
-    }
-  );
+  return json({ canonicalUrl });
 };
 
 export default function App() {
-  let { canonicalUrl, theme } = useLoaderData();
-  const fetcher = useFetcher();
+  const { canonicalUrl } = useLoaderData();
+  const [theme, setTheme] = useState('dark');
   const { state } = useNavigation();
 
-  if (fetcher.formData?.has('theme')) {
-    theme = fetcher.formData.get('theme');
-  }
+  useEffect(() => {
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') setTheme(stored);
+  }, []);
 
   function toggleTheme(newTheme) {
-    fetcher.submit(
-      { theme: newTheme ? newTheme : theme === 'dark' ? 'light' : 'dark' },
-      { action: '/api/set-theme', method: 'post' }
-    );
+    const next = newTheme || (theme === 'dark' ? 'light' : 'dark');
+    setTheme(next);
+    document.body.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch (e) {
+      // Private browsing with storage disabled — theme still applies for this page view
+    }
   }
 
   useEffect(() => {
@@ -124,7 +109,8 @@ export default function App() {
         <Links />
         <link rel="canonical" href={canonicalUrl} />
       </head>
-      <body data-theme={theme}>
+      <body suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeProvider theme={theme} toggleTheme={toggleTheme}>
           <Progress />
           <VisuallyHidden showOnFocus as="a" className={styles.skip} href="#main-content">
@@ -161,7 +147,8 @@ export function ErrorBoundary() {
         <Meta />
         <Links />
       </head>
-      <body data-theme="dark">
+      <body suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <Error error={error} />
         <ScrollRestoration />
         <Scripts />
