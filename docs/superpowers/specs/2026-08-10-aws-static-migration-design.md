@@ -46,7 +46,7 @@ crawl-prerender script (custom machinery on a maintenance-only framework).
 GitHub push to main
   └─ Actions workflow, OIDC → IAM role
        └─ sst deploy --stage production
-            ├─ react-router build  (prerenders 13 routes → build/client)
+            ├─ react-router build  (prerenders 14 routes + 404 → build/client)
             ├─ S3 bucket (private, OAC-only)
             ├─ CloudFront distribution
             │    └─ 404 error response → /404.html
@@ -69,7 +69,7 @@ Mechanical, no logic changes:
   work below.
 - `react-router.config.js` sets `ssr: false` and an explicit `prerender` array.
 
-**Prerendered paths (13):**
+**Prerendered paths (14, plus a 404 page):**
 
 ```
 /                                  /projects/mormonize
@@ -153,7 +153,7 @@ also-dead `seb.onlineolive.com`.
 
 ## Verification
 
-1. `npm run build` produces `build/client` containing an `index.html` for each of the 13
+1. `npm run build` produces `build/client` containing an `index.html` for each of the 14
    prerendered paths plus `404.html`.
 2. Local preview: every route renders server-side content with correct `<title>`, meta
    and canonical tags; no blank shell.
