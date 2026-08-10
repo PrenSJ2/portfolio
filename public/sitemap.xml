@@ -4,11 +4,31 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>https://seb.onlineo.live/uses/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>https://seb.onlineo.live/articles/</loc>
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://seb.onlineo.live/uses/</loc>
+    <loc>https://seb.onlineo.live/articles/django-elastic-beanstalk/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://seb.onlineo.live/articles/instagram-platform-api/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://seb.onlineo.live/projects/ancient-bots/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://seb.onlineo.live/projects/fitcheck/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://seb.onlineo.live/projects/mormonize/</loc>
     <changefreq>monthly</changefreq>
   </url>
   <url>
@@ -20,15 +40,19 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
-    <loc>https://seb.onlineo.live/projects/voulez-vous/</loc>
-    <changefreq>monthly</changefreq>
-  </url>
-  <url>
     <loc>https://seb.onlineo.live/projects/teamworks/</loc>
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>https://seb.onlineo.live/projects/thoth/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>https://seb.onlineo.live/projects/volkihar-knight/</loc>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://seb.onlineo.live/projects/voulez-vous/</loc>
     <changefreq>monthly</changefreq>
   </url>
 </urlset>
