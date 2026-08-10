@@ -41,6 +41,30 @@ export default $config({
       //
       // The two never double-apply: the viewerResponse rewrite is guarded on
       // `statusCode === 200`, and in case (b) CloudFront has already set 404.
+      //
+      // !! UPGRADING SST WILL SILENTLY BREAK THIS !!
+      //
+      // None of the above is a documented API contract. It is coupled to SST's
+      // *internal* router behaviour in 3.19.3 — specifically that only
+      // root-level files go into the KV store, that subdirectories become
+      // prefix routes, and that a nested miss therefore surfaces as an origin
+      // 403 rather than being handled by the router. `sst` is pinned to exactly
+      // 3.19.3 in package.json for this reason; do not loosen it to a range.
+      //
+      // If SST is upgraded, these two mechanisms can start to overlap (double
+      // application) or leave a gap (soft 200s on missing pages) with no error
+      // and no build failure — the site just quietly starts lying to crawlers.
+      // After ANY SST version change, redeploy and re-verify all four cases:
+      //
+      //   /nope                     -> 404 + styled page  (viewerResponse path)
+      //   /projects/does-not-exist  -> 404 + styled page  (customErrorResponses path)
+      //   /assets/nope.js           -> 404 + styled page  (miss under an asset prefix)
+      //   /404.html                 -> 404 + styled page  (direct request)
+      //
+      // "Styled page" means the body contains "Error: redacted"; a raw
+      // <Error><Code>AccessDenied</Code> XML body or a 200 means it is broken.
+      // Also re-check that all 14 real routes still return 200 with their own
+      // distinct <title>, to catch the opposite failure of over-applying.
       transform: {
         cdn: {
           customErrorResponses: [
