@@ -17,5 +17,6 @@ export default [
   route('projects/thoth', 'routes/projects.thoth/route.js'),
   route('projects/volkihar-knight', 'routes/projects.volkihar-knight/route.js'),
   route('projects/voulez-vous', 'routes/projects.voulez-vous/route.js'),
+  route('404', 'routes/404.jsx'),
   route('*', 'routes/$.jsx'),
 ];

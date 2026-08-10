@@ -1,0 +1,20 @@
+export default {
+  ssr: false,
+  prerender: [
+    '/',
+    '/uses',
+    '/articles',
+    '/articles/django-elastic-beanstalk',
+    '/articles/instagram-platform-api',
+    '/projects/ancient-bots',
+    '/projects/fitcheck',
+    '/projects/mormonize',
+    '/projects/slice',
+    '/projects/smart-sparrow',
+    '/projects/teamworks',
+    '/projects/thoth',
+    '/projects/volkihar-knight',
+    '/projects/voulez-vous',
+    '/404',
+  ],
+};
