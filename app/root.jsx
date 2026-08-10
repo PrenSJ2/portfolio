@@ -58,7 +58,7 @@ export const links = () => [
 export const loader = async ({ request }) => {
   const { url } = request;
   const { pathname } = new URL(url);
-  const pathnameSliced = pathname.endsWith('/') ? pathname.slice(0, -1) : url;
+  const pathnameSliced = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
   const canonicalUrl = `${config.url}${pathnameSliced}`;
 
   return { canonicalUrl };
